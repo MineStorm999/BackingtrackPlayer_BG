@@ -5,3 +5,4 @@
 
 ### Libraries used
 - [Mini Audio](https://github.com/mackron/miniaudio) for wav/mp3/flac file streaming and multichannel playblack
+- [JSON](https://github.com/nlohmann/json) for human readable config
