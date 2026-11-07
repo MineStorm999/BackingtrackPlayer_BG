@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(BTP_Backend
     main.cpp
+    OutputStream.h
 )
 
 include_directories(thirdparty)
