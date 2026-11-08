@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <unistd.h>
+#include <vector>
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
 
@@ -39,8 +40,12 @@ void sleep_ms(int milliseconds) { // cross-platform sleep function
 #endif
 }
 
-struct Data {
-  ma_decoder *decoder[4];
+class OutputStream {
+  std::vector<ma_decoder *> inputs;
+}
+
+class Data {
+  std::vector<typename Tp>
 };
 
 void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
