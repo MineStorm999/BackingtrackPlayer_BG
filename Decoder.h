@@ -23,6 +23,11 @@ public:
     std::string path = data["path"]; // retrieve json data
     m_volume = data["volume"];
 
+    nlohmann::json routing = (data["routing"]); // reading -
+    if (routing.is_array()) { //  - and verifying routing matrix from json
+      printf("ERROR routing matrix is in wrong syntax/missing");
+      return;
+    }
     auto conf = ma_decoder_config_init(ma_format_f32, 0,
                                        SAMPLE_RATE); // init internal decoder
     ma_result r = ma_decoder_init_file(path.c_str(), &conf, &m_decoder);
@@ -31,12 +36,6 @@ public:
       return;
     }
 
-    nlohmann::json routing = (data["routing"]); // reading -
-
-    if (routing.is_array()) { //  - and verifying routing matrix from json
-      printf("ERROR routing matrix is in wrong syntax/missing");
-      return;
-    }
     if (routing.size() < GetChannelCount()) {
       printf("ERROR routing matrix is missing channels");
       return;
@@ -48,8 +47,8 @@ public:
 
     for (int i = 0; i < GetChannelCount(); i++) {
       nlohmann::json &jDstChannels =
-          routing[i]["dstChannels"]; // retrieving per channel rout dsts from
-                                     // json and verifying it
+          routing[i]; // retrieving per channel route dsts from
+                      // json and verifying it
       if (!jDstChannels.is_array()) {
         printf("ERROR routing matrix is in wrong syntax/missing (channel %i)",
                i);
@@ -61,7 +60,7 @@ public:
       m_routingMatrix[i].dstChannels = (ma_uint32 *)malloc(
           sizeof(ma_uint32) * m_routingMatrix[i].routeCount);
       for (int j = 0; j < m_routingMatrix[i].routeCount; j++) {
-        m_routingMatrix[i].dstChannels[j] = jDstChannels[i];
+        m_routingMatrix[i].dstChannels[j] = jDstChannels[j];
 
         if (jDstChannels[j] >=
             OUT_CHANNEL_COUNT) { // dst channel id out of range
