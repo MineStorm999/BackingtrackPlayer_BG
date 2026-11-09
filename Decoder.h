@@ -3,25 +3,20 @@
 #include "miniaudio.h"
 #include "thirdparty/json.hpp"
 #include <cstdio>
-#include <cstdlib>
 #include <iostream>
 #include <nlohmann/json_fwd.hpp>
 #include <string>
+#include <vector>
 
 #define TEMP_BUFFER_SIZE 4096
-
-struct ChannelRoute {
-  ma_uint32 routeCount;
-  ma_uint32 *dstChannels;
-};
 
 /**
  * @brief This class is a wrapper around ma_decoder for safer use
  *
  */
-class Decoder {
+class Track {
 public:
-  Decoder(nlohmann::json &data) {
+  Track(nlohmann::json &data) {
     if (data.is_null()) {
       printf("ERROR data is null\n");
       return;
@@ -33,7 +28,7 @@ public:
     }
     std::string path = data["path"]; // retrieve json data
 
-    if (!data["path"].is_number()) {
+    if (!data["volume"].is_number()) {
       printf("ERROR volume is empty, defaulting to 1.0f\n");
       m_volume = 1.0f;
     } else {
@@ -43,7 +38,7 @@ public:
     nlohmann::json routing = (data["routing"]); // reading -
     if (!routing.is_array()) { //  - and verifying routing matrix from json
       printf("ERROR routing matrix is in wrong syntax/missing\n");
-      std::cout << routing.dump(4);
+      // std::cout << routing.dump(4);
       return;
     }
 
@@ -57,14 +52,13 @@ public:
 
     if (routing.size() < GetChannelCount()) {
       printf("ERROR routing matrix is missing channels\n");
-      std::cout << routing.dump(4);
+      // std::cout << routing.dump(4);
+      ma_decoder_uninit(&m_decoder);
       return;
     }
     printf("Routed Channels: %u\n", (ma_uint32)routing.size());
 
-    m_routingMatrix = (ChannelRoute *)malloc(
-        sizeof(ChannelRoute) *
-        GetChannelCount()); // creating routing matrix in memory
+    m_routingMatrix.resize(GetChannelCount());
 
     for (int i = 0; i < GetChannelCount(); i++) {
       nlohmann::json &jDstChannels =
@@ -72,36 +66,30 @@ public:
                       // json and verifying it
       if (!jDstChannels.is_null()) {
         printf("ERROR routing matrix is missing (channel %i)\n", i);
-        std::cout << jDstChannels.dump(4);
+        // std::cout << jDstChannels.dump(4);
+        ma_decoder_uninit(&m_decoder);
         return;
       }
 
-      m_routingMatrix[i].routeCount =
-          jDstChannels.size(); // populating dst channel ids
-      m_routingMatrix[i].dstChannels = (ma_uint32 *)malloc(
-          sizeof(ma_uint32) * m_routingMatrix[i].routeCount);
-      for (int j = 0; j < m_routingMatrix[i].routeCount; j++) {
-        m_routingMatrix[i].dstChannels[j] = jDstChannels[j];
+      m_routingMatrix[i].resize(jDstChannels.size());
+      for (int j = 0; j < m_routingMatrix[i].size(); j++) {
+        m_routingMatrix[i][j] = jDstChannels[j];
 
         if (jDstChannels[j] >=
             OUT_CHANNEL_COUNT) { // dst channel id out of range
           printf(
               "ERROR routing matrix is in wrong: st channel id out of range\n");
+          ma_decoder_uninit(&m_decoder);
           return;
         }
       }
+      m_routingMatrix[i].shrink_to_fit();
     }
+    m_routingMatrix.shrink_to_fit();
     printf("Successfully created Decoder for %s\n", path.c_str());
   }
 
-  ~Decoder() {
-    for (int i = 0; i < GetChannelCount(); i++) {
-      delete m_routingMatrix[i].dstChannels;
-    }
-    delete m_routingMatrix;
-
-    // TODO uninit the decoder
-  };
+  ~Track() { _Uninit(); };
 
 private:
   ma_decoder m_decoder;
@@ -110,11 +98,21 @@ private:
   ma_uint64 m_pos{0}; // in samples
 
   float m_volume{1.0f};
-  ChannelRoute *m_routingMatrix;
+  std::vector<std::vector<ma_uint32>> m_routingMatrix;
 
   float m_tempBuffer[TEMP_BUFFER_SIZE]; // to store read data
 
+  void _Uninit() {
+    if (m_ready) {
+      ma_decoder_uninit(&m_decoder);
+    }
+    m_ready = false;
+    m_routingMatrix.clear();
+  }
+
 public:
+  bool Ready() { return m_ready; }
+
   ma_uint32 GetChannelCount() {
     if (!m_ready) {
       return 0;
@@ -194,11 +192,10 @@ public:
       for (iSample = 0; iSample < framesReadThisIteration * GetChannelCount();
            ++iSample) { // loop over all samples from the read frames
 
-        for (int d = 0; d < m_routingMatrix[channelID].routeCount;
+        for (int d = 0; d < m_routingMatrix[channelID].size();
              d++) { // loop over the routing matrix
           dst[(totalFramesRead * GetChannelCount()) +
-              (frameID * GetChannelCount()) +
-              m_routingMatrix[channelID].dstChannels[d]] +=
+              (frameID * GetChannelCount()) + m_routingMatrix[channelID][d]] +=
               m_tempBuffer[iSample] * m_volume; // add current sample to mix
         }
 

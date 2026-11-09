@@ -1,4 +1,5 @@
 #include "Decoder.h"
+#include "json.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -41,8 +42,34 @@ void sleep_ms(int milliseconds) { // cross-platform sleep function
 #endif
 }
 
-struct Data {
-  std::vector<Decoder> decoder;
+struct File {
+  File(nlohmann::json &config) { FromFile(config); }
+
+  void FromFile(nlohmann::json &config) {
+    if (config.is_null()) { // config missing
+      printf("ERROR config missing\n");
+      return;
+    }
+
+    nlohmann::json &tracks = config["tracks"];
+    if (!tracks.is_array()) { // files missing
+      printf("ERROR files missing\n");
+      return;
+    }
+
+    decoder.clear();
+    decoder.reserve(tracks.size());
+    for (nlohmann::json &f : tracks) {
+      decoder.push_back(f);
+      if (!decoder.back().Ready()) {
+        printf("Warning file setup failed/not routed, removing\n");
+        decoder.pop_back();
+      }
+    }
+    decoder.shrink_to_fit();
+  }
+
+  std::vector<Track> decoder;
 };
 
 void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
@@ -64,36 +91,25 @@ void Test() {
   printf("Test\n");
   std::ifstream f("config.json");
   nlohmann::json data = nlohmann::json::parse(f);
-  Decoder dec(data[2]);
+  Track dec(data[0]);
 }
 
 int main() {
-  Test();
-  exit(0);
   ma_result result;
   ma_decoder decoder;
   ma_device_config deviceConfig;
   ma_device device;
+  std::ifstream f("config.json");
+  nlohmann::json data = nlohmann::json::parse(f);
 
-  /*if (argc < 2) {
-      printf("No input file.\n");
-      //return -1;
-  }*/
-
-  result = ma_decoder_init_file(
-      "/home/spacedviking/Music/Campaign 1： Vox Machina/test.wav", NULL,
-      &decoder);
-  printf("test");
-  if (result != MA_SUCCESS) {
-    // return -2;
-  }
+  File file(data);
 
   deviceConfig = ma_device_config_init(ma_device_type_playback);
-  deviceConfig.playback.format = decoder.outputFormat;
-  deviceConfig.playback.channels = decoder.outputChannels * 4;
-  deviceConfig.sampleRate = decoder.outputSampleRate;
+  deviceConfig.playback.format = ma_format_f32;
+  deviceConfig.playback.channels = OUT_CHANNEL_COUNT;
+  deviceConfig.sampleRate = SAMPLE_RATE;
   deviceConfig.dataCallback = data_callback;
-  deviceConfig.pUserData = &decoder;
+  deviceConfig.pUserData = &data;
 
   if (ma_device_init(NULL, &deviceConfig, &device) != MA_SUCCESS) {
     printf("Failed to open playback device.\n");
