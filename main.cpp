@@ -1,7 +1,9 @@
+#include "Decoder.h"
 #include <cstdio>
 #include <cstdlib>
-#include <iostream>
+#include <fstream>
 #include <unistd.h>
+#include <vector>
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
 
@@ -40,27 +42,34 @@ void sleep_ms(int milliseconds) { // cross-platform sleep function
 }
 
 struct Data {
-  ma_decoder *decoder[4];
+  std::vector<Decoder> decoder;
 };
 
 void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
                    ma_uint32 frameCount) {
-  uint offset = 0;
-  Data *data = (Data *)pDevice->pUserData;
-  for (int i = 0; i < 4; i++) {
+  /* uint offset = 0;
+   Data *data = (Data *)pDevice->pUserData;
+   for (int i = 0; i < 4; i++) {
 
-    if (data->decoder[i] == NULL) {
-      return;
-    }
+     if (data->decoder[i] == NULL) {
+       return;
+     }
 
-    ma_decoder_read_pcm_frames(data->decoder[i], pOutput, frameCount, NULL);
-  }
-  (void)pInput;
+     ma_decoder_read_pcm_frames(data->decoder[i], pOutput, frameCount, NULL);
+   }
+   (void)pInput;*/
+}
+
+void Test() {
+  printf("Test\n");
+  std::ifstream f("config.json");
+  nlohmann::json data = nlohmann::json::parse(f);
+  Decoder dec(data[2]);
 }
 
 int main() {
-  std::cout << "Test" << std::endl;
-  printf("test");
+  Test();
+  exit(0);
   ma_result result;
   ma_decoder decoder;
   ma_device_config deviceConfig;

@@ -2,7 +2,9 @@
 #include "defines.h"
 #include "miniaudio.h"
 #include "thirdparty/json.hpp"
+#include <cstdio>
 #include <cstdlib>
+#include <iostream>
 #include <nlohmann/json_fwd.hpp>
 #include <string>
 
@@ -20,26 +22,45 @@ struct ChannelRoute {
 class Decoder {
 public:
   Decoder(nlohmann::json &data) {
-    std::string path = data["path"]; // retrieve json data
-    m_volume = data["volume"];
-
-    nlohmann::json routing = (data["routing"]); // reading -
-    if (routing.is_array()) { //  - and verifying routing matrix from json
-      printf("ERROR routing matrix is in wrong syntax/missing");
+    if (data.is_null()) {
+      printf("ERROR data is null\n");
       return;
     }
+
+    if (!data["path"].is_string()) {
+      printf("ERROR path is empty\n");
+      return;
+    }
+    std::string path = data["path"]; // retrieve json data
+
+    if (!data["path"].is_number()) {
+      printf("ERROR volume is empty, defaulting to 1.0f\n");
+      m_volume = 1.0f;
+    } else {
+      m_volume = data["volume"];
+    }
+
+    nlohmann::json routing = (data["routing"]); // reading -
+    if (!routing.is_array()) { //  - and verifying routing matrix from json
+      printf("ERROR routing matrix is in wrong syntax/missing\n");
+      std::cout << routing.dump(4);
+      return;
+    }
+
     auto conf = ma_decoder_config_init(ma_format_f32, 0,
                                        SAMPLE_RATE); // init internal decoder
     ma_result r = ma_decoder_init_file(path.c_str(), &conf, &m_decoder);
     if (r != MA_SUCCESS) {
-      printf("ERROR internal decoder init failed");
+      printf("ERROR internal decoder init failed\n");
       return;
     }
 
     if (routing.size() < GetChannelCount()) {
-      printf("ERROR routing matrix is missing channels");
+      printf("ERROR routing matrix is missing channels\n");
+      std::cout << routing.dump(4);
       return;
     }
+    printf("Routed Channels: %u\n", (ma_uint32)routing.size());
 
     m_routingMatrix = (ChannelRoute *)malloc(
         sizeof(ChannelRoute) *
@@ -49,9 +70,9 @@ public:
       nlohmann::json &jDstChannels =
           routing[i]; // retrieving per channel route dsts from
                       // json and verifying it
-      if (!jDstChannels.is_array()) {
-        printf("ERROR routing matrix is in wrong syntax/missing (channel %i)",
-               i);
+      if (!jDstChannels.is_null()) {
+        printf("ERROR routing matrix is missing (channel %i)\n", i);
+        std::cout << jDstChannels.dump(4);
         return;
       }
 
@@ -65,11 +86,12 @@ public:
         if (jDstChannels[j] >=
             OUT_CHANNEL_COUNT) { // dst channel id out of range
           printf(
-              "ERROR routing matrix is in wrong: st channel id out of range");
+              "ERROR routing matrix is in wrong: st channel id out of range\n");
           return;
         }
       }
     }
+    printf("Successfully created Decoder for %s\n", path.c_str());
   }
 
   ~Decoder() {

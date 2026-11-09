@@ -9,9 +9,10 @@
 
 ## Docs
 ### JSON Config 
+**Per Tracks**
 ```
-"Files":[
-    {
+[
+    {   // per decoder (file)
         "path":"path/to/audio/file", 
         "volume":1.0,
         "routing":[
@@ -19,5 +20,13 @@
             [0,1,2,3], // route channel 1 to 0-3 out
         ]
     },
+    {   // per decoder (file)
+        "path":"path/to/audio/file2", 
+        "volume":1.0,
+        "routing":[
+            [0,1,2,3,4,5,6,7], // route channel 0 to 0-7 out
+            [0,1,2,3], // route channel 1 to 0-3 out
+        ]
+    }
 ]
 ```
