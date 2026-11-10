@@ -59,16 +59,15 @@ struct File {
     }
 
     tracks.clear();
-    tracks.reserve(tracksJS.size() * 100); // Testing
-    int i = 0;
+    tracks.reserve(tracksJS.size() * 10); // Testing
+    // int i = 0;
     for (nlohmann::json &f : tracksJS) {
-      for (int i = 0; i < 100; i++) {
+      for (int i = 0; i < 12; i++) {
         tracks.push_back(std::make_shared<Track>(f));
         if (!tracks.back()->Ready()) {
           printf("Warning file setup failed/not routed, removing\n");
           tracks.pop_back();
         }
-        i++;
       }
     }
     tracks.shrink_to_fit();
