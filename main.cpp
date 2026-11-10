@@ -60,10 +60,10 @@ struct File {
     }
 
     tracks.clear();
-    tracks.reserve(tracksJS.size() * 100); // Testing
+    tracks.reserve(tracksJS.size()); // Testing
     // int i = 0;
     for (nlohmann::json &f : tracksJS) {
-      for (int i = 0; i < 50; i++) {
+      for (int i = 0; i < 1; i++) {
         tracks.push_back(std::make_shared<Track>(f));
         if (!tracks.back()->Ready()) {
           printf("Warning file setup failed/not routed, removing\n");

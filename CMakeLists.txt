@@ -18,6 +18,7 @@ FetchContent_MakeAvailable(eigen)
 
 add_executable(BTP_Backend
     main.cpp
+    Track.cpp
 )
 
 target_link_libraries(BTP_Backend PRIVATE Eigen3::Eigen)
