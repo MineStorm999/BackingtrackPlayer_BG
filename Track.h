@@ -1,11 +1,7 @@
 #pragma once
 #include "Eigen/Core"
-#include "defines.h"
+#include "json.hpp"
 #include "miniaudio.h"
-#include "thirdparty/json.hpp"
-#include <cstdio>
-#include <nlohmann/json_fwd.hpp>
-#include <string>
 #include <vector>
 
 #define TEMP_BUFFER_SIZE 4096

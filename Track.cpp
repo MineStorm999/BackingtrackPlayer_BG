@@ -1,5 +1,7 @@
 #include "Track.h"
 
+#include "defines.h"
+
 Track::Track(nlohmann::json &data) {
   if (data.is_null()) {
     printf("ERROR data is null\n");

@@ -3,10 +3,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
-#include <memory>
 #include <unistd.h>
-#include <vector>
 #define MINIAUDIO_IMPLEMENTATION
+#include "Song.h"
+#include "defines.h"
 #include "miniaudio.h"
 #include <Eigen/Dense>
 
@@ -44,56 +44,18 @@ void sleep_ms(int milliseconds) { // cross-platform sleep function
 #endif
 }
 
-struct File {
-  File(nlohmann::json &config) { FromFile(config); }
-
-  void FromFile(nlohmann::json &config) {
-    if (config.is_null()) { // config missing
-      printf("ERROR config missing\n");
-      return;
-    }
-
-    nlohmann::json &tracksJS = config["tracks"];
-    if (!tracksJS.is_array()) { // files missing
-      printf("ERROR files missing\n");
-      return;
-    }
-
-    tracks.clear();
-    tracks.reserve(tracksJS.size()); // Testing
-    // int i = 0;
-    for (nlohmann::json &f : tracksJS) {
-      for (int i = 0; i < 1; i++) {
-        tracks.push_back(std::make_shared<Track>(f));
-        if (!tracks.back()->Ready()) {
-          printf("Warning file setup failed/not routed, removing\n");
-          tracks.pop_back();
-        }
-      }
-    }
-    tracks.shrink_to_fit();
-  }
-
-  std::vector<std::shared_ptr<Track>> tracks;
-  void Play() {
-    for (auto t : tracks) {
-      t->Play();
-    }
-  }
-};
-
 void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
                    ma_uint32 frameCount) {
   if (!pDevice->pUserData) {
     return;
   }
-  File *file = (File *)pDevice->pUserData;
-  if (!file) {
+  Song *song = (Song *)pDevice->pUserData;
+  if (!song) {
     return;
   }
   Eigen::Map<Eigen::MatrixXf> dstMat((float *)pOutput, OUT_CHANNEL_COUNT,
                                      frameCount);
-  for (auto track : file->tracks) {
+  for (auto track : song->tracks) {
     if (!track) {
       continue;
     }
@@ -117,15 +79,15 @@ int main() {
   std::ifstream f("config.json");
   nlohmann::json data = nlohmann::json::parse(f);
 
-  File file(data);
-  file.Play();
+  Song song(data);
+  song.Play();
 
   deviceConfig = ma_device_config_init(ma_device_type_playback);
   deviceConfig.playback.format = ma_format_f32;
   deviceConfig.playback.channels = OUT_CHANNEL_COUNT;
   deviceConfig.sampleRate = SAMPLE_RATE;
   deviceConfig.dataCallback = data_callback;
-  deviceConfig.pUserData = &file;
+  deviceConfig.pUserData = &song;
 
   if (ma_device_init(NULL, &deviceConfig, &device) != MA_SUCCESS) {
     printf("Failed to open playback device.\n");
