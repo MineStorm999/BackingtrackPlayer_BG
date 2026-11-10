@@ -52,42 +52,41 @@ struct File {
       return;
     }
 
-    nlohmann::json &tracks = config["tracks"];
-    if (!tracks.is_array()) { // files missing
+    nlohmann::json &tracksJS = config["tracks"];
+    if (!tracksJS.is_array()) { // files missing
       printf("ERROR files missing\n");
       return;
     }
 
-    decoder.clear();
-    decoder.resize(tracks.size());
+    tracks.clear();
+    tracks.resize(tracksJS.size());
     int i = 0;
-    for (nlohmann::json &f : tracks) {
-      decoder.push_back(std::make_shared<Track>(f));
-      if (!decoder.back()->Ready()) {
+    for (nlohmann::json &f : tracksJS) {
+      tracks.push_back(std::make_shared<Track>(f));
+      if (!tracks.back()->Ready()) {
         printf("Warning file setup failed/not routed, removing\n");
-        decoder.pop_back();
+        tracks.pop_back();
       }
       i++;
     }
-    decoder.shrink_to_fit();
+    tracks.shrink_to_fit();
   }
 
-  std::vector<std::shared_ptr<Track>> decoder;
+  std::vector<std::shared_ptr<Track>> tracks;
 };
 
 void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
                    ma_uint32 frameCount) {
-  /* uint offset = 0;
-   Data *data = (Data *)pDevice->pUserData;
-   for (int i = 0; i < 4; i++) {
-
-     if (data->decoder[i] == NULL) {
-       return;
-     }
-
-     ma_decoder_read_pcm_frames(data->decoder[i], pOutput, frameCount, NULL);
-   }
-   (void)pInput;*/
+  if (!pDevice->pUserData) {
+    return;
+  }
+  File *file = (File *)pDevice->pUserData;
+  if (!file) {
+    return;
+  }
+  for (auto track : file->tracks) {
+    track->ReadPCMFramesAndMixToOutput((float *)pOutput, frameCount);
+  }
 }
 
 void Test() {

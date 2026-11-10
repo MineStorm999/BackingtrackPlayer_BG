@@ -156,7 +156,10 @@ public:
     m_playing = true;
   }
 
-  // read the pcm frames
+  /**
+   * @brief Read the requested pcm frames and mix them to the output buffer
+   * @in: dst = outputbuffer, count output count in frames
+   */
   ma_uint64 ReadPCMFramesAndMixToOutput(float *dst, ma_uint64 count) {
     if (!m_playing ||
         !m_ready) { // return early, if paused (or not initialized right)
