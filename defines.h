@@ -1,0 +1,3 @@
+
+#define SAMPLE_RATE 48000
+#define OUT_CHANNEL_COUNT 8

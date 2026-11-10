@@ -1,9 +1,16 @@
+#include "Track.h"
+#include "json.hpp"
+#include <cstdio>
 #include <cstdlib>
+#include <fstream>
+#include <memory>
 #include <unistd.h>
+#include <vector>
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
+#include <Eigen/Dense>
 
-void ExitOnFail(ma_result result){
+void ExitOnFail(ma_result result) {
   if (result != MA_SUCCESS) {
     printf("Error: %u", (uint)result);
     exit(-1);
@@ -11,71 +18,131 @@ void ExitOnFail(ma_result result){
 }
 
 // Source - https://stackoverflow.com/a/28827188
-// Posted by Bernardo Ramos, modified by community. See post 'Timeline' for change history
-// Retrieved 2026-11-07, License - CC BY-SA 4.0
+// Posted by Bernardo Ramos, modified by community. See post 'Timeline' for
+// change history Retrieved 2026-11-07, License - CC BY-SA 4.0
 
 #ifdef WIN32
 #include <windows.h>
 #elif _POSIX_C_SOURCE >= 199309L
-#include <time.h>   // for nanosleep
+#include <time.h> // for nanosleep
 #else
 #include <unistd.h> // for usleep
 #endif
 
-void sleep_ms(int milliseconds){ // cross-platform sleep function
+void sleep_ms(int milliseconds) { // cross-platform sleep function
 #ifdef WIN32
-    Sleep(milliseconds);
+  Sleep(milliseconds);
 #elif _POSIX_C_SOURCE >= 199309L
-    struct timespec ts;
-    ts.tv_sec = milliseconds / 1000;
-    ts.tv_nsec = (milliseconds % 1000) * 1000000;
-    nanosleep(&ts, NULL);
+  struct timespec ts;
+  ts.tv_sec = milliseconds / 1000;
+  ts.tv_nsec = (milliseconds % 1000) * 1000000;
+  nanosleep(&ts, NULL);
 #else
-    if (milliseconds >= 1000)
-      sleep(milliseconds / 1000);
-    usleep((milliseconds % 1000) * 1000);
+  if (milliseconds >= 1000)
+    sleep(milliseconds / 1000);
+  usleep((milliseconds % 1000) * 1000);
 #endif
 }
 
+struct File {
+  File(nlohmann::json &config) { FromFile(config); }
+
+  void FromFile(nlohmann::json &config) {
+    if (config.is_null()) { // config missing
+      printf("ERROR config missing\n");
+      return;
+    }
+
+    nlohmann::json &tracksJS = config["tracks"];
+    if (!tracksJS.is_array()) { // files missing
+      printf("ERROR files missing\n");
+      return;
+    }
+
+    tracks.clear();
+    tracks.reserve(tracksJS.size()); // Testing
+    // int i = 0;
+    for (nlohmann::json &f : tracksJS) {
+      for (int i = 0; i < 1; i++) {
+        tracks.push_back(std::make_shared<Track>(f));
+        if (!tracks.back()->Ready()) {
+          printf("Warning file setup failed/not routed, removing\n");
+          tracks.pop_back();
+        }
+      }
+    }
+    tracks.shrink_to_fit();
+  }
+
+  std::vector<std::shared_ptr<Track>> tracks;
+  void Play() {
+    for (auto t : tracks) {
+      t->Play();
+    }
+  }
+};
+
+void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
+                   ma_uint32 frameCount) {
+  if (!pDevice->pUserData) {
+    return;
+  }
+  File *file = (File *)pDevice->pUserData;
+  if (!file) {
+    return;
+  }
+  Eigen::Map<Eigen::MatrixXf> dstMat((float *)pOutput, OUT_CHANNEL_COUNT,
+                                     frameCount);
+  for (auto track : file->tracks) {
+    if (!track) {
+      continue;
+    }
+
+    track->ReadPCMFramesAndMixToOutput(dstMat, frameCount);
+  }
+}
+
+void Test() {
+  printf("Test\n");
+  std::ifstream f("config.json");
+  nlohmann::json data = nlohmann::json::parse(f);
+  Track dec(data[0]);
+}
 
 int main() {
   ma_result result;
-  ma_engine engine;
+  ma_decoder decoder;
+  ma_device_config deviceConfig;
+  ma_device device;
+  std::ifstream f("config.json");
+  nlohmann::json data = nlohmann::json::parse(f);
 
-  result = ma_engine_init(NULL, &engine);
-  if (result != MA_SUCCESS) {
-    return -1;
+  File file(data);
+  file.Play();
+
+  deviceConfig = ma_device_config_init(ma_device_type_playback);
+  deviceConfig.playback.format = ma_format_f32;
+  deviceConfig.playback.channels = OUT_CHANNEL_COUNT;
+  deviceConfig.sampleRate = SAMPLE_RATE;
+  deviceConfig.dataCallback = data_callback;
+  deviceConfig.pUserData = &file;
+
+  if (ma_device_init(NULL, &deviceConfig, &device) != MA_SUCCESS) {
+    printf("Failed to open playback device.\n");
+    ma_decoder_uninit(&decoder);
+    return -3;
   }
-  ma_sound sound;
 
-  result = ma_sound_init_from_file(&engine, "SampleMedia/Braam 004 (D).wav", 0,
-                                   NULL, NULL, &sound);
-  if (result != MA_SUCCESS) {
-    return result;
+  if (ma_device_start(&device) != MA_SUCCESS) {
+    printf("Failed to start playback device.\n");
+    ma_device_uninit(&device);
+    return -4;
   }
 
-  while (true) {
+  printf("Press Enter to quit...");
+  getchar();
 
-    if (!ma_sound_is_playing(&sound)) {
-
-      //ma_sound_group_set_fade_in_milliseconds(&sound, 0,1, 20);
-      ma_sound_set_volume(&sound, 1);
-      ExitOnFail(ma_sound_start(&sound));
-      ma_sound_set_volume(&sound, 1);
-      printf("Press Enter to pause");
-    } else {
-      ma_sound_group_set_fade_in_milliseconds(&sound, 1,0, 200);
-      sleep_ms(200);
-      ma_sound_stop(&sound);
-
-      //ExitOnFail(ma_sound_stop_with_fade_in_milliseconds(&sound, 5));
-      ExitOnFail(ma_sound_seek_to_pcm_frame(&sound, 0));
-      printf("Press Enter to play");
-    }
-
-    getchar();
-  }
-  ma_engine_uninit(&engine);
+  ma_device_uninit(&device);
 
   return 0;
 }
