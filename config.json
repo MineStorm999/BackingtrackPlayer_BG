@@ -2,25 +2,49 @@
     "tracks": [
         {
             "path": "SampleMedia/ShakeItRap_CH05 Click.wav",
-            "volume": 0.1,
+            "volume": 0.01,
             "routing": [
                 [
-                    5
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
                 ],
                 [
-                    5
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
                 ]
             ]
         },
         {
             "path": "SampleMedia/ShakeItRap_Alt Sax.wav",
-            "volume": 0.1,
+            "volume": 0.01,
             "routing": [
                 [
-                    5
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
                 ],
                 [
-                    5
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
                 ]
             ]
         }

@@ -8,6 +8,7 @@
 #include <vector>
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
+#include <Eigen/Dense>
 
 void ExitOnFail(ma_result result) {
   if (result != MA_SUCCESS) {
@@ -62,7 +63,7 @@ struct File {
     tracks.reserve(tracksJS.size() * 100); // Testing
     // int i = 0;
     for (nlohmann::json &f : tracksJS) {
-      for (int i = 0; i < 50; i++) {
+      for (int i = 0; i < 250; i++) {
         tracks.push_back(std::make_shared<Track>(f));
         if (!tracks.back()->Ready()) {
           printf("Warning file setup failed/not routed, removing\n");
@@ -90,11 +91,14 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
   if (!file) {
     return;
   }
+  Eigen::Map<Eigen::MatrixXf> dstMat((float *)pOutput, OUT_CHANNEL_COUNT,
+                                     frameCount);
   for (auto track : file->tracks) {
     if (!track) {
       continue;
     }
-    track->ReadPCMFramesAndMixToOutput((float *)pOutput, frameCount);
+
+    track->ReadPCMFramesAndMixToOutput(dstMat, frameCount);
   }
 }
 

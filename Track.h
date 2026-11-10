@@ -1,4 +1,5 @@
 #pragma once
+#include "Eigen/Core"
 #include "defines.h"
 #include "miniaudio.h"
 #include "thirdparty/json.hpp"
@@ -99,9 +100,10 @@ private:
   ma_uint64 m_pos{0}; // in samples
 
   float m_volume{1.0f};
-  std::vector<std::vector<ma_uint32>> m_routingMatrix;
+  std::vector<std::vector<ma_uint32>>
+      m_routingMatrix; // in channel / outchannel [in][out]
 
-  float m_tempBuffer[TEMP_BUFFER_SIZE]; // to store read data
+  std::vector<float> m_tempBuffer; // to store read data
 
   void _Uninit() {
     printf("Deleting\n");
@@ -159,69 +161,38 @@ public:
    * @brief Read the requested pcm frames and mix them to the output buffer
    * @in: dst = outputbuffer, count output count in frames
    */
-  ma_uint64 ReadPCMFramesAndMixToOutput(float *dst, ma_uint64 count) {
+  ma_uint64 ReadPCMFramesAndMixToOutput(Eigen::Map<Eigen::MatrixXf> &outMat,
+                                        ma_uint64 count) {
     if (!m_playing ||
         !m_ready) { // return early, if paused (or not initialized right)
       return 0;
     }
 
+    m_tempBuffer.resize(std::max(
+        (ma_uint64)m_tempBuffer.size(),
+        count * GetChannelCount())); // resize read buffer to frame count
+
     ma_result result; // init vars
-    ma_uint32 tempCapInFrames = TEMP_BUFFER_SIZE / GetChannelCount();
-    ma_uint32 totalFramesRead = 0;
 
-    while (totalFramesRead <
-           count) { // read in the same temp buffer until requested frames read
+    // auto &t = dstMat;
+    ma_uint64 read = 0;
+    result = ma_decoder_read_pcm_frames(&m_decoder, m_tempBuffer.data(), count,
+                                        &read);
 
-      ma_uint64 iSample; // the current input sample id
-      ma_uint64 framesReadThisIteration;
-      ma_uint32 totalFramesRemaining = count - totalFramesRead;
-      ma_uint32 framesToReadThisIteration = tempCapInFrames;
+    Eigen::Map<Eigen::MatrixXf> inMat(m_tempBuffer.data(), GetChannelCount(),
+                                      read); // create matrix
 
-      if (framesToReadThisIteration >
-          totalFramesRemaining) { // cap to be read frame amount at remaining
-                                  // frame amount
-        framesToReadThisIteration = totalFramesRemaining;
-      }
-
-      result = ma_decoder_read_pcm_frames(
-          &m_decoder, m_tempBuffer, framesToReadThisIteration,
-          &framesReadThisIteration); // read the frames from internal decoder
-      if (result != MA_SUCCESS ||
-          framesReadThisIteration == 0) { // error occurred
-        break;
-      }
-
-      ma_uint32 channelID = 0; // id of the current input channel
-      ma_uint32 frameID = 0;   // id of the current FrameID
-      for (iSample = 0; iSample < framesReadThisIteration * GetChannelCount();
-           ++iSample) { // loop over all samples from the read frames
-
-        for (int d = 0; d < m_routingMatrix[channelID].size();
-             d++) { // loop over the routing matrix
-          dst[(totalFramesRead * OUT_CHANNEL_COUNT) +
-              (frameID * OUT_CHANNEL_COUNT) + m_routingMatrix[channelID][d]] +=
-              m_tempBuffer[iSample] * m_volume; // add current sample to mix
-        }
-
-        channelID++; // increment channel
-        if (channelID >=
-            GetChannelCount()) { // if all channels of the Frame are processed
-                                 // advance ptrs to next
-          channelID = 0;
-          frameID++;
-        }
-      }
-
-      totalFramesRead +=
-          (ma_uint32)framesReadThisIteration; // increase the read frame count
-
-      if (framesReadThisIteration <
-          (ma_uint32)framesToReadThisIteration) { // auto pause if requesting
-                                                  // over range
-        m_playing = false;
+    inMat *= m_volume;
+    for (int in = 0; in < m_routingMatrix.size(); in++) {
+      for (ma_uint32 out : m_routingMatrix[in]) {
+        outMat.row(out) += inMat.row(in);
       }
     }
 
-    return totalFramesRead; // return total frames read
+    if (read < count) { // auto pause if requesting
+                        // over range
+      m_playing = false;
+    }
+    return read; // return total frames read
   }
 };
