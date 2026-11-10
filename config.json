@@ -47,6 +47,222 @@
                     7
                 ]
             ]
+        },
+        {
+            "path": "SampleMedia/ShakeItRap_CH02 Drums.wav",
+            "volume": 0.01,
+            "routing": [
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ],
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ]
+            ]
+        },
+        {
+            "path": "SampleMedia/ShakeItRap_CH03 Bass.wav",
+            "volume": 0.01,
+            "routing": [
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ],
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ]
+            ]
+        },
+        {
+            "path": "SampleMedia/ShakeItRap_CH04_ FX.wav",
+            "volume": 0.01,
+            "routing": [
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ],
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ]
+            ]
+        },
+        {
+            "path": "SampleMedia/ShakeItRap_CH05 Click.wav",
+            "volume": 0.01,
+            "routing": [
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ],
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ]
+            ]
+        },
+        {
+            "path": "SampleMedia/ShakeItRap_melo.wav",
+            "volume": 0.01,
+            "routing": [
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ],
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ]
+            ]
+        },
+        {
+            "path": "SampleMedia/ShakeItRap_TRP 1.wav",
+            "volume": 0.01,
+            "routing": [
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ],
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ]
+            ]
+        },
+        {
+            "path": "SampleMedia/ShakeItRap_Trombone.wav",
+            "volume": 0.01,
+            "routing": [
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ],
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ]
+            ]
+        },
+        {
+            "path": "SampleMedia/ShakeItRap_Sopran Sax.wav",
+            "volume": 0.01,
+            "routing": [
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ],
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ]
+            ]
+        },
+        {
+            "path": "SampleMedia/ShakeItRap_Shake-it-refrain-neu-trp1_1.wav",
+            "volume": 0.01,
+            "routing": [
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ],
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7
+                ]
+            ]
         }
     ]
 }
