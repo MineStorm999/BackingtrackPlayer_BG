@@ -59,20 +59,27 @@ struct File {
     }
 
     tracks.clear();
-    tracks.resize(tracksJS.size());
+    tracks.reserve(tracksJS.size() * 10); // Testing
     int i = 0;
     for (nlohmann::json &f : tracksJS) {
-      tracks.push_back(std::make_shared<Track>(f));
-      if (!tracks.back()->Ready()) {
-        printf("Warning file setup failed/not routed, removing\n");
-        tracks.pop_back();
+      for (int i = 0; i < 10; i++) {
+        tracks.push_back(std::make_shared<Track>(f));
+        if (!tracks.back()->Ready()) {
+          printf("Warning file setup failed/not routed, removing\n");
+          tracks.pop_back();
+        }
+        i++;
       }
-      i++;
     }
     tracks.shrink_to_fit();
   }
 
   std::vector<std::shared_ptr<Track>> tracks;
+  void Play() {
+    for (auto t : tracks) {
+      t->Play();
+    }
+  }
 };
 
 void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
@@ -85,6 +92,9 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
     return;
   }
   for (auto track : file->tracks) {
+    if (!track) {
+      continue;
+    }
     track->ReadPCMFramesAndMixToOutput((float *)pOutput, frameCount);
   }
 }
@@ -105,13 +115,14 @@ int main() {
   nlohmann::json data = nlohmann::json::parse(f);
 
   File file(data);
+  file.Play();
 
   deviceConfig = ma_device_config_init(ma_device_type_playback);
   deviceConfig.playback.format = ma_format_f32;
   deviceConfig.playback.channels = OUT_CHANNEL_COUNT;
   deviceConfig.sampleRate = SAMPLE_RATE;
   deviceConfig.dataCallback = data_callback;
-  deviceConfig.pUserData = &data;
+  deviceConfig.pUserData = &file;
 
   if (ma_device_init(NULL, &deviceConfig, &device) != MA_SUCCESS) {
     printf("Failed to open playback device.\n");

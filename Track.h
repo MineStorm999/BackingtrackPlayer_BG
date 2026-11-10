@@ -2,7 +2,7 @@
 #include "defines.h"
 #include "miniaudio.h"
 #include "thirdparty/json.hpp"
-#include <cstdio>q
+#include <cstdio>
 #include <nlohmann/json_fwd.hpp>
 #include <string>
 #include <vector>
@@ -48,8 +48,8 @@ public:
       printf("ERROR internal decoder init failed\n");
       return;
     }
-
-    if (routing.size() < GetChannelCount()) {
+    ma_uint32 channelCount = m_decoder.outputChannels;
+    if (routing.size() < channelCount) {
       printf("ERROR routing matrix is missing channels\n");
       // std::cout << routing.dump(4);
       ma_decoder_uninit(&m_decoder);
@@ -57,13 +57,13 @@ public:
     }
     printf("Routed Channels: %u\n", (ma_uint32)routing.size());
 
-    m_routingMatrix.resize(GetChannelCount());
+    m_routingMatrix.resize(channelCount);
 
-    for (int i = 0; i < GetChannelCount(); i++) {
+    for (int i = 0; i < channelCount; i++) {
       nlohmann::json &jDstChannels =
           routing[i]; // retrieving per channel route dsts from
                       // json and verifying it
-      if (!jDstChannels.is_null()) {
+      if (jDstChannels.is_null()) {
         printf("ERROR routing matrix is missing (channel %i)\n", i);
         // std::cout << jDstChannels.dump(4);
         ma_decoder_uninit(&m_decoder);
@@ -147,9 +147,8 @@ public:
 
   // pause playback
   void Pause() { m_playing = false; }
-
   // start playback
-  void Start(bool fromBeginning = false) {
+  void Play(bool fromBeginning = false) {
     if (fromBeginning) {
       Seek(0);
     }
@@ -199,8 +198,8 @@ public:
 
         for (int d = 0; d < m_routingMatrix[channelID].size();
              d++) { // loop over the routing matrix
-          dst[(totalFramesRead * GetChannelCount()) +
-              (frameID * GetChannelCount()) + m_routingMatrix[channelID][d]] +=
+          dst[(totalFramesRead * OUT_CHANNEL_COUNT) +
+              (frameID * OUT_CHANNEL_COUNT) + m_routingMatrix[channelID][d]] +=
               m_tempBuffer[iSample] * m_volume; // add current sample to mix
         }
 
