@@ -9,9 +9,9 @@
 - [Eigen](https://libeigen.gitlab.io/) for vectorisation
 ## Docs
 ### JSON Config 
-**Per Tracks**
+**Song Config**
 ```
-[
+"tracks":[
     {   // per decoder (file)
         "path":"path/to/audio/file", 
         "volume":1.0,
