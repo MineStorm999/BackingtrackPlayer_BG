@@ -1,0 +1,13 @@
+- [x] audio backend
+    - mabybe add more optimisation
+- [] controls
+    - [] start
+    - [] stop
+    - [] reverse
+    - [] fade out to prevent clipping
+- [] show structure
+    - [] show
+    - [x] songs
+    - [x] tracks
+
+- [] usbstick detection
