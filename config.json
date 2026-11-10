@@ -2,7 +2,7 @@
     "tracks": [
         {
             "path": "SampleMedia/Braam 004 (D).wav",
-            "volume": 1,
+            "volume": 0.1,
             "routing": [
                 [
                     0,
@@ -28,7 +28,7 @@
         },
         {
             "path": "SampleMedia/ShakeItRap_Alt Sax.wav",
-            "volume": 1.0,
+            "volume": 0.1,
             "routing": [
                 [
                     0,
