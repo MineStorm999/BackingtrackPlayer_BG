@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <memory>
 #include <unistd.h>
 #include <vector>
 #define MINIAUDIO_IMPLEMENTATION
@@ -58,18 +59,20 @@ struct File {
     }
 
     decoder.clear();
-    decoder.reserve(tracks.size());
+    decoder.resize(tracks.size());
+    int i = 0;
     for (nlohmann::json &f : tracks) {
-      decoder.push_back(f);
-      if (!decoder.back().Ready()) {
+      decoder.push_back(std::make_shared<Track>(f));
+      if (!decoder.back()->Ready()) {
         printf("Warning file setup failed/not routed, removing\n");
         decoder.pop_back();
       }
+      i++;
     }
     decoder.shrink_to_fit();
   }
 
-  std::vector<Track> decoder;
+  std::vector<std::shared_ptr<Track>> decoder;
 };
 
 void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
@@ -120,7 +123,6 @@ int main() {
   if (ma_device_start(&device) != MA_SUCCESS) {
     printf("Failed to start playback device.\n");
     ma_device_uninit(&device);
-    ma_decoder_uninit(&decoder);
     return -4;
   }
 
@@ -128,7 +130,6 @@ int main() {
   getchar();
 
   ma_device_uninit(&device);
-  ma_decoder_uninit(&decoder);
 
   return 0;
 }

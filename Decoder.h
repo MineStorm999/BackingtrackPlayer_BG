@@ -86,7 +86,9 @@ public:
       m_routingMatrix[i].shrink_to_fit();
     }
     m_routingMatrix.shrink_to_fit();
+
     printf("Successfully created Decoder for %s\n", path.c_str());
+    m_ready = true;
   }
 
   ~Track() { _Uninit(); };
@@ -103,6 +105,7 @@ private:
   float m_tempBuffer[TEMP_BUFFER_SIZE]; // to store read data
 
   void _Uninit() {
+    printf("Deleting\n");
     if (m_ready) {
       ma_decoder_uninit(&m_decoder);
     }
