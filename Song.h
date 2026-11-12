@@ -21,6 +21,8 @@ public:
   // TODO mabybe optimize
   float GetVolumeForNextSample();
 
+  bool Playing();
+
 private:
   std::atomic<ma_uint64> m_sampleProgress; // in pcm frames
   std::atomic<bool> m_playing;

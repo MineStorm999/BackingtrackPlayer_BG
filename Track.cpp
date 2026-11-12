@@ -74,6 +74,7 @@ Track::Track(nlohmann::json &data) {
 
   printf("Successfully created Decoder for %s\n", path.c_str());
   m_ready = true;
+  m_playing = true;
 }
 Track::~Track() { _Uninit(); }
 void Track::_Uninit() {

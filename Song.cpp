@@ -1,6 +1,10 @@
 #include "Song.h"
+#include <cstdio>
 
-Song::Song(nlohmann::json &config) { FromFile(config); }
+Song::Song(nlohmann::json &config) {
+  FromFile(config);
+  m_playing = true;
+}
 void Song::FromFile(nlohmann::json &config) {
   if (config.is_null()) { // config missing
     printf("ERROR config missing\n");
@@ -30,9 +34,9 @@ void Song::FromFile(nlohmann::json &config) {
 ma_uint64 Song::GetProgressInPCMFrames() { return m_sampleProgress; }
 void Song::Play() {
   m_playing = true;
-  StartFade(1.0, 480, false);
+  StartFade(1.0, 480000, false);
 }
-void Song::Pause() { StartFade(1.0, 480, true); }
+void Song::Pause() { StartFade(0.0, 480000, true); }
 void Song::StartFade(float target, ma_uint64 fadeSamples, bool shouldStop) {
   m_fadeAmount = (target - m_volume) / fadeSamples;
   m_shouldFade = true;
@@ -56,5 +60,8 @@ float Song::GetVolumeForNextSample() {
     return m_volume;
   }
   m_volume = m_volume + m_fadeAmount;
+  float vol = m_volume;
+  printf("Volume: %f\n", vol);
   return m_volume;
 }
+bool Song::Playing() { return m_playing; }
