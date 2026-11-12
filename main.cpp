@@ -1,6 +1,7 @@
 #include "Eigen/Core"
 #include "Track.h"
 #include "json.hpp"
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -71,7 +72,7 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
 
   for (int i = 0; i < frameCount; i++) {
     // volumeVec[i] = song->GetVolumeForNextSample();
-    dstMat.col(i) *= song->GetVolumeForNextSample();
+    dstMat.col(i) *= std::pow(song->GetVolumeForNextSample(), 2);
   }
   // dstMat.rowwise() += volumeVec.transpose();
 }
