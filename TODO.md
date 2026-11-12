@@ -1,10 +1,10 @@
 - [x] audio backend
     - mabybe add more optimisation
-- [] controls
-    - [] start
-    - [] stop
-    - [] reverse
-    - [] fade out to prevent clipping
+- [x] controls
+    - [x] start
+    - [x] stop
+    - [x] revert
+    - [x] fade out to prevent clipping
 - [] show structure
     - [] show
     - [x] songs

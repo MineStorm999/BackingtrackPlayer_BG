@@ -1,40 +1,42 @@
 #include "Track.h"
+#include "miniaudio.h"
+#include <atomic>
 
 class Song {
 public:
-  Song(nlohmann::json &config) { FromFile(config); }
+  Song(nlohmann::json &config);
 
-  void FromFile(nlohmann::json &config) {
-    if (config.is_null()) { // config missing
-      printf("ERROR config missing\n");
-      return;
-    }
+  void FromFile(nlohmann::json &config);
 
-    nlohmann::json &tracksJS = config["tracks"];
-    if (!tracksJS.is_array()) { // files missing
-      printf("ERROR files missing\n");
-      return;
-    }
+  ma_uint64 GetProgressInPCMFrames();
 
-    tracks.clear();
-    tracks.reserve(tracksJS.size()); // Testing
-    // int i = 0;
-    for (nlohmann::json &f : tracksJS) {
-      for (int i = 0; i < 1; i++) {
-        tracks.push_back(std::make_shared<Track>(f));
-        if (!tracks.back()->Ready()) {
-          printf("Warning file setup failed/not routed, removing\n");
-          tracks.pop_back();
-        }
-      }
-    }
-    tracks.shrink_to_fit();
-  }
+  void Play();
+  void Pause(bool stop = false);
 
   std::vector<std::shared_ptr<Track>> tracks;
-  void Play() {
-    for (auto t : tracks) {
-      t->Play();
-    }
-  }
+
+  void StartFade(float target, ma_uint64 fadeSamples, bool shouldStop,
+                 bool shouldReverse);
+
+  // TODO mabybe optimize
+  float GetVolumeForNextSample();
+
+  bool Playing();
+  bool MustReverse();
+
+  void ReverseTracks();
+
+private:
+  std::atomic<ma_uint64> m_sampleProgress; // in pcm frames
+  std::atomic<bool> m_playing;
+  std::atomic<int> m_fadeFramesRemaining;
+  std::atomic<float> m_fadeAmount;
+  std::atomic<bool> m_shouldFade;
+
+  std::atomic<bool> m_shouldStop;
+  std::atomic<bool> m_shouldReverse;
+  std::atomic<bool>
+      m_mustReverse; // used by audio thread, to know if to reverse
+
+  std::atomic<float> m_volume;
 };

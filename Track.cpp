@@ -74,6 +74,7 @@ Track::Track(nlohmann::json &data) {
 
   printf("Successfully created Decoder for %s\n", path.c_str());
   m_ready = true;
+  m_playing = true;
 }
 Track::~Track() { _Uninit(); }
 void Track::_Uninit() {
@@ -117,6 +118,7 @@ void Track::Play(bool fromBeginning) {
 ma_uint64
 Track::ReadPCMFramesAndMixToOutput(Eigen::Map<Eigen::MatrixXf> &outMat,
                                    ma_uint64 count) {
+
   if (!m_playing ||
       !m_ready) { // return early, if paused (or not initialized right)
     return 0;

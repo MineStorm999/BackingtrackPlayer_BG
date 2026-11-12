@@ -1,5 +1,7 @@
+#include "Eigen/Core"
 #include "Track.h"
 #include "json.hpp"
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -49,8 +51,15 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
   if (!pDevice->pUserData) {
     return;
   }
+
   Song *song = (Song *)pDevice->pUserData;
   if (!song) {
+    return;
+  }
+  if (song->MustReverse()) {
+    song->ReverseTracks();
+  }
+  if (!song->Playing()) {
     return;
   }
   Eigen::Map<Eigen::MatrixXf> dstMat((float *)pOutput, OUT_CHANNEL_COUNT,
@@ -62,6 +71,13 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
 
     track->ReadPCMFramesAndMixToOutput(dstMat, frameCount);
   }
+  Eigen::VectorXf volumeVec(frameCount);
+
+  for (int i = 0; i < frameCount; i++) {
+    // volumeVec[i] = song->GetVolumeForNextSample();
+    dstMat.col(i) *= std::pow(song->GetVolumeForNextSample(), 2);
+  }
+  // dstMat.rowwise() += volumeVec.transpose();
 }
 
 void Test() {
@@ -100,10 +116,19 @@ int main() {
     ma_device_uninit(&device);
     return -4;
   }
+  int state = 0;
+  while (true) {
 
-  printf("Press Enter to quit...");
-  getchar();
-
+    printf("Press Enter to quit...");
+    getchar();
+    if (state == 0) {
+      song.Pause(true);
+      state++;
+    } else if (state == 1) {
+      song.Play();
+      state = 0;
+    }
+  }
   ma_device_uninit(&device);
 
   return 0;
