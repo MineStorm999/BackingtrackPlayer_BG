@@ -11,17 +11,20 @@ public:
   ma_uint64 GetProgressInPCMFrames();
 
   void Play();
-
-  void Pause();
+  void Pause(bool stop = false);
 
   std::vector<std::shared_ptr<Track>> tracks;
 
-  void StartFade(float target, ma_uint64 fadeSamples, bool shouldStop);
+  void StartFade(float target, ma_uint64 fadeSamples, bool shouldStop,
+                 bool shouldReverse);
 
   // TODO mabybe optimize
   float GetVolumeForNextSample();
 
   bool Playing();
+  bool MustReverse();
+
+  void ReverseTracks();
 
 private:
   std::atomic<ma_uint64> m_sampleProgress; // in pcm frames
@@ -29,7 +32,11 @@ private:
   std::atomic<int> m_fadeFramesRemaining;
   std::atomic<float> m_fadeAmount;
   std::atomic<bool> m_shouldFade;
+
   std::atomic<bool> m_shouldStop;
+  std::atomic<bool> m_shouldReverse;
+  std::atomic<bool>
+      m_mustReverse; // used by audio thread, to know if to reverse
 
   std::atomic<float> m_volume;
 };

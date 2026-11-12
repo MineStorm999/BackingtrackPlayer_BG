@@ -56,6 +56,9 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
   if (!song) {
     return;
   }
+  if (song->MustReverse()) {
+    song->ReverseTracks();
+  }
   if (!song->Playing()) {
     return;
   }
@@ -113,17 +116,18 @@ int main() {
     ma_device_uninit(&device);
     return -4;
   }
-  bool stopped = false;
+  int state = 0;
   while (true) {
 
     printf("Press Enter to quit...");
     getchar();
-    if (stopped) {
+    if (state == 0) {
+      song.Pause(true);
+      state++;
+    } else if (state == 1) {
       song.Play();
-    } else {
-      song.Pause();
+      state = 0;
     }
-    stopped = !stopped;
   }
   ma_device_uninit(&device);
 

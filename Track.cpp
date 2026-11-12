@@ -118,6 +118,7 @@ void Track::Play(bool fromBeginning) {
 ma_uint64
 Track::ReadPCMFramesAndMixToOutput(Eigen::Map<Eigen::MatrixXf> &outMat,
                                    ma_uint64 count) {
+
   if (!m_playing ||
       !m_ready) { // return early, if paused (or not initialized right)
     return 0;
