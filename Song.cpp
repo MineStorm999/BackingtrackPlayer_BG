@@ -34,11 +34,11 @@ void Song::FromFile(nlohmann::json &config) {
 ma_uint64 Song::GetProgressInPCMFrames() { return m_sampleProgress; }
 void Song::Play() {
   m_playing = true;
-  StartFade(1.0, 480000, false);
+  StartFade(1.0, 48000, false);
 }
-void Song::Pause() { StartFade(0.0, 480000, true); }
+void Song::Pause() { StartFade(0.0, 48000, true); }
 void Song::StartFade(float target, ma_uint64 fadeSamples, bool shouldStop) {
-  m_fadeAmount = (target - m_volume) / fadeSamples;
+  m_fadeAmount = (float)(target - m_volume) / (float)fadeSamples;
   m_shouldFade = true;
   m_fadeFramesRemaining = fadeSamples;
   m_shouldStop = shouldStop;
@@ -61,7 +61,7 @@ float Song::GetVolumeForNextSample() {
   }
   m_volume = m_volume + m_fadeAmount;
   float vol = m_volume;
-  printf("Volume: %f\n", vol);
+  // printf("Volume: %f\n", vol);
   return m_volume;
 }
 bool Song::Playing() { return m_playing; }
