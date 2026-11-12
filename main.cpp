@@ -70,9 +70,10 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
   Eigen::VectorXf volumeVec(frameCount);
 
   for (int i = 0; i < frameCount; i++) {
-    volumeVec[i] = song->GetVolumeForNextSample();
+    // volumeVec[i] = song->GetVolumeForNextSample();
+    dstMat.col(i) *= song->GetVolumeForNextSample();
   }
-  dstMat.rowwise() += volumeVec.transpose();
+  // dstMat.rowwise() += volumeVec.transpose();
 }
 
 void Test() {

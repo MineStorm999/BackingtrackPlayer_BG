@@ -31,5 +31,5 @@ private:
   std::atomic<bool> m_shouldFade;
   std::atomic<bool> m_shouldStop;
 
-  /*std::atomic<*/ float /*>*/ m_volume;
+  std::atomic<float> m_volume;
 };
