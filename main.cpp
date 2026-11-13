@@ -89,6 +89,33 @@ void Test() {
   Track dec(data[0]);
 }
 
+bool is_removable_device(UDisksClient *client, UDisksBlock *block) {
+  if (!client || !block) {
+    return false;
+  }
+
+  // 1. Physisches Laufwerk (UDisksDrive) zum Blockgerät abrufen
+  // Hinweis: _get_drive_for_block erhöht den Referenzzähler!
+  UDisksDrive *drive = udisks_client_get_drive_for_block(client, block);
+  if (!drive) {
+    // Virtuelle Geräte (z. B. Loop-Devices oder RAM-Disks) haben kein
+    // UDisksDrive
+    return false;
+  }
+
+  // 2. Prüfen, ob das Laufwerk wechselbar ist
+  gboolean is_removable = udisks_drive_get_removable(drive);
+
+  // Optional: Zusätzlich prüfen, ob es über USB angeschlossen ist
+  // const gchar *connection_bus = udisks_drive_get_connection_bus(drive);
+  // bool is_usb = (g_strcmp0(connection_bus, "usb") == 0);
+
+  // 3. Referenz auf UDisksDrive wieder freigeben
+  g_object_unref(drive);
+
+  return is_removable == TRUE;
+}
+
 void TestUDEV() {
   GError *error = nullptr;
 
@@ -111,6 +138,9 @@ void TestUDEV() {
     // Prüfen, ob das Objekt ein Blockgerät ist
     UDisksBlock *block = udisks_object_peek_block(object);
     if (block) {
+      if (!is_removable_device(client, block)) {
+        continue;
+      }
       const gchar *device = udisks_block_get_device(block);
       guint64 size = udisks_block_get_size(block);
       std::cout << "Gerät: " << device << " (" << (size / (1024 * 1024))
@@ -118,9 +148,11 @@ void TestUDEV() {
 
       // Prüfen, ob das Blockgerät ein Dateisystem besitzt
       UDisksFilesystem *fs = udisks_object_peek_filesystem(object);
+
       if (fs) {
         const gchar *const *mount_points =
             udisks_filesystem_get_mount_points(fs);
+
         if (mount_points && mount_points[0]) {
           std::cout << " -> Eingehängt unter: " << mount_points[0];
         } else {
