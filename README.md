@@ -9,10 +9,14 @@
 - [Eigen](https://libeigen.gitlab.io/) for vectorisation
 ## Docs
 ### JSON Config 
+***Important*** All paths **must** be *relative*  
+
 **Song Config**
+- Shows must contain .song (ie.: my_show.song.json)
 ```
+"name":"song name"
 "tracks":[
-    {   // per decoder (file)
+    {   // per track (file)
         "path":"path/to/audio/file", 
         "volume":1.0,
         "routing":[
@@ -20,7 +24,7 @@
             [0,1,2,3], // route channel 1 to 0-3 out
         ]
     },
-    {   // per decoder (file)
+    {   // per track (file)
         "path":"path/to/audio/file2", 
         "volume":1.0,
         "routing":[
@@ -29,4 +33,34 @@
         ]
     }
 ]
+```
+**Show Config**
+- Shows Must be in top (root) level.
+- Shows must contain .show (ie.: my_show.show.json)
+```
+"name":"show name"
+"songs":[
+    {
+        "path":"path/to/show.config"
+    },
+    {
+        "path":"path/to/show1.config"
+    }
+]
+```
+**Folder Structure Example**
+```
+root/
+|-my_show.show.json
+|-my_song/
+  |---my_song.song.json
+  |---track.wav
+  |---track1.wav
+  |---track2.wav
+|-my_song2/
+  |---my_song.song.json
+  |---Tracks/
+      |---track.wav
+      |---track1.wav
+      |---track2.wav
 ```
