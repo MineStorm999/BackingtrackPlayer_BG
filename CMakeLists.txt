@@ -13,6 +13,9 @@ FetchContent_Declare(
     GIT_TAG 5.0.1
 )
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(UDISKS2 REQUIRED IMPORTED_TARGET udisks2)
+
 # 3. Eigen verfügbar machen
 FetchContent_MakeAvailable(eigen)
 
@@ -22,7 +25,7 @@ add_executable(BTP_Backend
     Song.cpp
 )
 
-target_link_libraries(BTP_Backend PRIVATE Eigen3::Eigen)
+target_link_libraries(BTP_Backend PRIVATE Eigen3::Eigen PkgConfig::UDISKS2)
 include_directories(thirdparty)
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64" OR CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64")

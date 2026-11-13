@@ -11,6 +11,8 @@
 #include "defines.h"
 #include "miniaudio.h"
 #include <Eigen/Dense>
+#include <iostream>
+#include <udisks/udisks.h>
 
 void ExitOnFail(ma_result result) {
   if (result != MA_SUCCESS) {
@@ -87,7 +89,55 @@ void Test() {
   Track dec(data[0]);
 }
 
+void TestUDEV() {
+  GError *error = nullptr;
+
+  // 1. Synchronen Client initialisieren
+  UDisksClient *client = udisks_client_new_sync(nullptr, &error);
+  if (!client) {
+    std::cerr << "Fehler beim Verbinden mit UDisks2: " << error->message
+              << "\n";
+    g_error_free(error);
+    return;
+  }
+
+  // 2. Alle verwalteten D-Bus-Objekte abrufen
+  GDBusObjectManager *manager = udisks_client_get_object_manager(client);
+  GList *objects = g_dbus_object_manager_get_objects(manager);
+
+  for (GList *l = objects; l != nullptr; l = l->next) {
+    UDisksObject *object = UDISKS_OBJECT(l->data);
+
+    // Prüfen, ob das Objekt ein Blockgerät ist
+    UDisksBlock *block = udisks_object_peek_block(object);
+    if (block) {
+      const gchar *device = udisks_block_get_device(block);
+      guint64 size = udisks_block_get_size(block);
+      std::cout << "Gerät: " << device << " (" << (size / (1024 * 1024))
+                << " MB)";
+
+      // Prüfen, ob das Blockgerät ein Dateisystem besitzt
+      UDisksFilesystem *fs = udisks_object_peek_filesystem(object);
+      if (fs) {
+        const gchar *const *mount_points =
+            udisks_filesystem_get_mount_points(fs);
+        if (mount_points && mount_points[0]) {
+          std::cout << " -> Eingehängt unter: " << mount_points[0];
+        } else {
+          std::cout << " -> Nicht eingehängt";
+        }
+      }
+      std::cout << "\n";
+    }
+  }
+
+  // 3. Speicher freigeben
+  g_list_free_full(objects, g_object_unref);
+  g_object_unref(client);
+}
+
 int main() {
+  TestUDEV();
   ma_result result;
   ma_decoder decoder;
   ma_device_config deviceConfig;

@@ -130,7 +130,7 @@ Track::ReadPCMFramesAndMixToOutput(Eigen::Map<Eigen::MatrixXf> &outMat,
 
   ma_result result; // init vars
 
-  // auto &t = dstMat;
+  // auto &t = dstMat;s
   ma_uint64 read = 0;
   result =
       ma_decoder_read_pcm_frames(&m_decoder, m_tempBuffer.data(), count, &read);
