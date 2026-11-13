@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <thread>
 #include <unistd.h>
 #define MINIAUDIO_IMPLEMENTATION
 #include "Song.h"
@@ -168,8 +169,72 @@ void TestUDEV() {
   g_object_unref(client);
 }
 
+static void on_object_added(GDBusObjectManager *manager, GDBusObject *object,
+                            gpointer user_data) {
+  UDisksClient *client = UDISKS_CLIENT(user_data);
+  UDisksObject *udisks_obj = UDISKS_OBJECT(object);
+
+  UDisksBlock *block = udisks_object_peek_block(udisks_obj);
+  UDisksFilesystem *fs = udisks_object_peek_filesystem(udisks_obj);
+
+  // Nur reagieren, wenn es ein Blockgerät mit Dateisystem und ein Wechselmedium
+  // ist
+  if (block && fs && is_removable_device(client, block)) {
+    const gchar *device = udisks_block_get_device(block);
+    const gchar *label = udisks_block_get_id_label(block);
+
+    std::cout << "[ANGESCHLOSSEN] Gerät: " << device
+              << " | Label: " << (label && *label ? label : "Unbenannt")
+              << "\n";
+  }
+}
+
+// Callback: Wird aufgerufen, wenn ein Gerät entfernt wird
+static void on_object_removed(GDBusObjectManager *manager, GDBusObject *object,
+                              gpointer user_data) {
+  UDisksObject *udisks_obj = UDISKS_OBJECT(object);
+  UDisksBlock *block = udisks_object_peek_block(udisks_obj);
+
+  if (block) {
+    std::cout << "[ENTFERNT] Gerät: " << udisks_block_get_device(block) << "\n";
+  }
+}
+
+void TestDisksLoop() {
+  GError *error = nullptr;
+  UDisksClient *client = udisks_client_new_sync(nullptr, &error);
+  if (!client) {
+    std::cerr << "UDisks2 Fehler: " << error->message << "\n";
+    g_error_free(error);
+    return;
+  }
+
+  GDBusObjectManager *manager = udisks_client_get_object_manager(client);
+
+  // Signale mit unseren Callback-Funktionen verknüpfen
+  g_signal_connect(manager, "object-added", G_CALLBACK(on_object_added),
+                   client);
+  g_signal_connect(manager, "object-removed", G_CALLBACK(on_object_removed),
+                   client);
+
+  // GMainLoop erstellen und in einem Hintergrund-Thread starten
+  GMainLoop *loop = g_main_loop_new(nullptr, FALSE);
+  std::thread dbus_thread([loop]() { g_main_loop_run(loop); });
+
+  std::cout << "Überwache USB-Geräte... Drücken Sie Enter zum Beenden.\n";
+  std::cin.get();
+
+  // Sauberes Beenden der Loop und Aufräumen
+  g_main_loop_quit(loop);
+  dbus_thread.join();
+
+  g_main_loop_unref(loop);
+  g_object_unref(client);
+}
+
 int main() {
-  TestUDEV();
+  // TestUDEV();
+  TestDisksLoop();
   ma_result result;
   ma_decoder decoder;
   ma_device_config deviceConfig;
