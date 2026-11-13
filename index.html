@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Multitrack Song Router</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            font: 14px/1.45 system-ui, sans-serif;
+            --pink: #f45ba5;
+            --pink-light: #ffacd0;
+            --purple: #bd73c9;
+            --orange: #f4a54c;
+            --yellow: #ffd879;
+            --ink: #21131d;
+            --panel: #291b29;
+            --panel-light: #392536;
+            --line: #69415e;
+            --muted: #e5c7d9;
+            background: #291b29;
+            color: #fff3fa;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 22px;
+            background: linear-gradient(110deg, #ed69b2 0%, #d98dc3 37%, #e8a7a4 65%, #f6c75e 100%);
+        }
+
+        main {
+            max-width: 1240px;
+            margin: auto;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 26px;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        h3 {
+            margin: 0 0 10px;
+            font-size: 14px;
+        }
+
+        p {
+            color: var(--muted);
+        }
+
+        button,
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: 8px 13px;
+            border: 1px solid #e98cb7;
+            border-radius: 9px;
+            background: linear-gradient(120deg, #a8467d, #c8713c);
+            color: white;
+            font: inherit;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        button:hover,
+        .button:hover {
+            filter: brightness(1.12);
+        }
+
+        button:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            filter: none;
+        }
+
+        button.danger {
+            background: linear-gradient(120deg, #852c55, #a64b37);
+        }
+
+        button.secondary {
+            background: #54364f;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        input[type="checkbox"],
+        input[type="range"] {
+            accent-color: var(--pink);
+        }
+
+        .panel {
+            margin: 14px 0;
+            padding: 15px;
+            border: 1px solid var(--line);
+            border-radius: 13px;
+            background: rgba(41, 27, 41, .96);
+            box-shadow: 0 8px 22px #30122330;
+        }
+
+        .toolbar,
+        .toolbar-group,
+        .song-header,
+        .track-header,
+        .row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 9px;
+        }
+
+        .toolbar {
+            margin-top: 16px;
+        }
+
+        .toolbar-group {
+            flex: 1 1 auto;
+        }
+
+        #status {
+            flex: 1 1 220px;
+            color: var(--muted);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 220px minmax(0, 1fr);
+            gap: 14px;
+            align-items: start;
+        }
+
+        .song-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .song-tab {
+            width: 100%;
+            justify-content: space-between;
+            background: #392536;
+            border-color: #70415f;
+            text-align: left;
+        }
+
+        .song-tab.active {
+            background: linear-gradient(110deg, #984b79, #a86649);
+            border-color: var(--yellow);
+        }
+
+        .count {
+            color: #ffe3a3;
+            font-size: 12px;
+        }
+
+        .song-header {
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .bulk {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .bulk-box {
+            padding: 12px;
+            border: 1px solid #754762;
+            border-radius: 10px;
+            background: var(--panel-light);
+        }
+
+        .bulk-box label {
+            color: var(--muted);
+        }
+
+        .bulk-volume {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bulk-volume input {
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .bulk-value {
+            min-width: 62px;
+            color: var(--yellow);
+            font-weight: 700;
+        }
+
+        .select-all {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 9px;
+        }
+
+        .tracks {
+            display: grid;
+            gap: 12px;
+        }
+
+        .track {
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid #70445f;
+            border-radius: 11px;
+            background: #211820;
+        }
+
+        .track-header {
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .track-name {
+            flex: 1 1 180px;
+            overflow-wrap: anywhere;
+            font-weight: 700;
+        }
+
+        .track-tools {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .track-tools label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--muted);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 64px;
+            margin: 8px 0 12px;
+            border: 1px solid #523347;
+            border-radius: 7px;
+            background: #160f15;
+        }
+
+        .track-controls {
+            display: grid;
+            grid-template-columns: minmax(180px, 230px) minmax(300px, 1fr);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .volume-label,
+        .routing-title {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--yellow);
+            font-weight: 700;
+        }
+
+        .volume-value {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .volume-control input {
+            width: 100%;
+        }
+
+        .routing-grid {
+            display: grid;
+            grid-template-columns: 55px repeat(8, minmax(25px, 1fr));
+            gap: 5px;
+            align-items: center;
+            text-align: center;
+        }
+
+        .routing-grid .heading {
+            color: var(--pink-light);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .routing-grid .channel {
+            color: var(--muted);
+            text-align: left;
+            font-weight: 700;
+        }
+
+        .routing-grid input {
+            width: 17px;
+            height: 17px;
+        }
+
+        .empty {
+            padding: 24px;
+            border: 1px dashed #9d6385;
+            border-radius: 10px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        @media (max-width: 760px) {
+            body {
+                padding: 12px;
+            }
+
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .bulk {
+                grid-template-columns: 1fr;
+            }
+
+            .track-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <h1>Multitrack Song Router</h1>
+        <p>Manage songs, set track volumes and route left/right channels to 8 outputs.</p>
+
+        <section class="panel toolbar">
+            <div class="toolbar-group">
+                <button id="addSong" type="button">Add song</button>
+                <button id="removeSong" class="danger" type="button">Remove song</button>
+                <button id="duplicateSong" class="secondary" type="button">Duplicate song</button>
+                <button id="saveConfig" type="button">Save config</button>
+                <button id="loadConfig" class="secondary" type="button">Load config</button>
+                <input id="configFile" type="file" accept=".json,application/json">
+            </div>
+            <span id="status" role="status">Ready.</span>
+        </section>
+
+        <div class="layout">
+            <aside class="panel">
+                <h2 style="margin-bottom: 12px">Songs</h2>
+                <div id="songList" class="song-list"></div>
+            </aside>
+
+            <section class="panel">
+                <div id="songEditor"></div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        (() => {
+            "use strict";
+
+            const state = {
+                songs: [],
+                activeSongId: null
+            };
+
+            const songListEl = document.getElementById("songList");
+            const songEditorEl = document.getElementById("songEditor");
+            const statusEl = document.getElementById("status");
+            const removeSongButton = document.getElementById("removeSong");
+            const configFileInput = document.getElementById("configFile");
+
+            // Slider position 0 is mute; positions 1–7000 represent -60 to +10 dB.
+            const SLIDER_MAX = 7000;
+            const MIN_DB = -60;
+            const MAX_DB = 10;
+
+            function newId() {
+                return globalThis.crypto?.randomUUID?.() ??
+                    `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+            }
+
+            function setStatus(message) {
+                statusEl.textContent = message;
+            }
+
+            function currentSong() {
+                return state.songs.find(song => song.id === state.activeSongId) ?? null;
+            }
+
+            function dbAtSlider(position) {
+                if (Number(position) <= 0) return -Infinity;
+                return MIN_DB + ((Number(position) - 1) / (SLIDER_MAX - 1)) * (MAX_DB - MIN_DB);
+            }
+
+            function linearAtSlider(position) {
+                const db = dbAtSlider(position);
+                return db === -Infinity ? 0 : Math.pow(10, db / 20);
+            }
+
+            function sliderAtLinear(linear) {
+                if (!(linear > 0)) return 0;
+                const db = Math.max(MIN_DB, Math.min(MAX_DB, 20 * Math.log10(linear)));
+                return Math.round(1 + ((db - MIN_DB) / (MAX_DB - MIN_DB)) * (SLIDER_MAX - 1));
+            }
+
+            function formatDb(db) {
+                return db === -Infinity ? "−∞ dB" : `${db.toFixed(1)} dB`;
+            }
+
+            function newSong(name) {
+                return { id: newId(), name, tracks: [] };
+            }
+
+            function newTrack(file, buffer) {
+                return {
+                    id: newId(),
+                    path: file.webkitRelativePath || file.name,
+                    volume: 0.01,
+                    routing: [Array(8).fill(false), Array(8).fill(false)],
+                    buffer,
+                    selected: false
+                };
+            }
+
+            function normalizeRouting(routing) {
+                return [0, 1].map(channel => {
+                    const row = Array.isArray(routing?.[channel]) ? routing[channel] : [];
+                    return Array.from({ length: 8 }, (_, output) => {
+                        const value = row[output];
+                        // Supports both boolean arrays and the numbered-output format.
+                        return typeof value === "boolean" ? value : row.includes(output + 1);
+                    });
+                });
+            }
+
+            function normalizeSongs(data) {
+                let songs;
+
+                if (Array.isArray(data?.songs)) {
+                    songs = data.songs;
+                } else if (Array.isArray(data?.tracks)) {
+                    // Also accept the original single-song config format.
+                    songs = [{ name: data.name || "Song 1", tracks: data.tracks }];
+                } else if (Array.isArray(data)) {
+                    songs = data;
+                } else {
+                    throw new Error("Config must contain a songs array or tracks array.");
+                }
+
+                if (!songs.length) throw new Error("The config has no songs.");
+
+                return songs.map((song, songIndex) => ({
+                    id: newId(),
+                    name: String(song.name || `Song ${songIndex + 1}`),
+                    tracks: (Array.isArray(song.tracks) ? song.tracks : []).map(track => ({
+                        id: newId(),
+                        path: String(track.path || "audio-file"),
+                        volume: Number.isFinite(Number(track.volume)) && Number(track.volume) >= 0
+                            ? Number(track.volume)
+                            : 0.01,
+                        routing: normalizeRouting(track.routing),
+                        buffer: null,
+                        selected: false
+                    }))
+                }));
+            }
+
+            function addSong() {
+                const song = newSong(`Song ${state.songs.length + 1}`);
+                state.songs.push(song);
+                state.activeSongId = song.id;
+                render();
+                setStatus(`Added ${song.name}.`);
+            }
+
+            function removeSong() {
+                if (state.songs.length <= 1) {
+                    setStatus("Keep at least one song in the editor.");
+                    return;
+                }
+
+                const removed = currentSong();
+                state.songs = state.songs.filter(song => song.id !== state.activeSongId);
+                state.activeSongId = state.songs[0].id;
+                render();
+                setStatus(`Removed ${removed?.name || "song"}.`);
+            }
+
+            function duplicateSong() {
+                const source = currentSong();
+                if (!source) return;
+
+                const copy = {
+                    id: newId(),
+                    name: `${source.name} Copy`,
+                    tracks: source.tracks.map(track => ({
+                        ...track,
+                        id: newId(),
+                        routing: track.routing.map(row => [...row]),
+                        selected: false
+                    }))
+                };
+
+                const index = state.songs.findIndex(song => song.id === source.id);
+                state.songs.splice(index + 1, 0, copy);
+                state.activeSongId = copy.id;
+                render();
+                setStatus(`Duplicated ${source.name}.`);
+            }
+
+            function renderSongList() {
+                songListEl.replaceChildren();
+
+                for (const song of state.songs) {
+                    const button = document.createElement("button");
+                    button.type = "button";
+                    button.className = `song-tab${song.id === state.activeSongId ? " active" : ""}`;
+
+                    const name = document.createElement("span");
+                    name.textContent = song.name;
+
+                    const count = document.createElement("span");
+                    count.className = "count";
+                    count.textContent = `${song.tracks.length} tracks`;
+
+                    button.append(name, count);
+                    button.addEventListener("click", () => {
+                        state.activeSongId = song.id;
+                        render();
+                    });
+                    songListEl.appendChild(button);
+                }
+
+                removeSongButton.disabled = state.songs.length <= 1;
+            }
+
+            function drawWaveform(canvas, buffer) {
+                if (!buffer) return;
+
+                const ratio = window.devicePixelRatio || 1;
+                const width = Math.max(1, Math.floor(canvas.clientWidth * ratio));
+                const height = Math.max(1, Math.floor(canvas.clientHeight * ratio));
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext("2d");
+                ctx.fillStyle = "#160f15";
+                ctx.fillRect(0, 0, width, height);
+
+                const data = buffer.getChannelData(0);
+                const step = Math.max(1, Math.floor(data.length / width));
+                const middle = height / 2;
+                const gradient = ctx.createLinearGradient(0, 0, width, 0);
+                gradient.addColorStop(0, "#f45ba5");
+                gradient.addColorStop(.52, "#bd73c9");
+                gradient.addColorStop(1, "#ffd879");
+
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = Math.max(1, ratio);
+                ctx.beginPath();
+
+                for (let x = 0; x < width; x++) {
+                    const start = x * step;
+                    let min = 1;
+                    let max = -1;
+
+                    for (let i = start; i < Math.min(start + step, data.length); i++) {
+                        min = Math.min(min, data[i]);
+                        max = Math.max(max, data[i]);
+                    }
+
+                    ctx.moveTo(x, middle + min * middle * .9);
+                    ctx.lineTo(x, middle + max * middle * .9);
+                }
+
+                ctx.stroke();
+            }
+
+            function makeRouting(track) {
+                const grid = document.createElement("div");
+                grid.className = "routing-grid";
+
+                const blank = document.createElement("span");
+                blank.className = "heading";
+                blank.textContent = "Input";
+                grid.appendChild(blank);
+
+                for (let output = 0; output < 8; output++) {
+                    const heading = document.createElement("span");
+                    heading.className = "heading";
+                    heading.textContent = String(output + 1);
+                    grid.appendChild(heading);
+                }
+
+                for (let channel = 0; channel < 2; channel++) {
+                    const label = document.createElement("span");
+                    label.className = "channel";
+                    label.textContent = channel === 0 ? "Left" : "Right";
+                    grid.appendChild(label);
+
+                    for (let output = 0; output < 8; output++) {
+                        const checkbox = document.createElement("input");
+                        checkbox.type = "checkbox";
+                        checkbox.checked = track.routing[channel][output];
+                        checkbox.setAttribute(
+                            "aria-label",
+                            `${channel === 0 ? "Left" : "Right"} routed to output ${output + 1}`
+                        );
+                        checkbox.addEventListener("change", () => {
+                            track.routing[channel][output] = checkbox.checked;
+                        });
+                        grid.appendChild(checkbox);
+                    }
+                }
+
+                return grid;
+            }
+
+            function makeTrackCard(song, track, index) {
+                const card = document.createElement("article");
+                card.className = "track";
+
+                const header = document.createElement("div");
+                header.className = "track-header";
+
+                const name = document.createElement("div");
+                name.className = "track-name";
+                name.textContent = track.path || `Track ${index + 1}`;
+
+                const tools = document.createElement("div");
+                tools.className = "track-tools";
+
+                const selectLabel = document.createElement("label");
+                const select = document.createElement("input");
+                select.type = "checkbox";
+                select.checked = track.selected;
+                select.addEventListener("change", () => {
+                    track.selected = select.checked;
+                    updateSelectedCount(song);
+                });
+                selectLabel.append(select, document.createTextNode("Select"));
+
+                const remove = document.createElement("button");
+                remove.type = "button";
+                remove.className = "danger";
+                remove.textContent = "Remove track";
+                remove.addEventListener("click", () => {
+                    song.tracks = song.tracks.filter(item => item.id !== track.id);
+                    render();
+                    setStatus(`Removed ${track.path}.`);
+                });
+
+                tools.append(selectLabel, remove);
+                header.append(name, tools);
+
+                const canvas = document.createElement("canvas");
+                canvas.setAttribute("aria-label", `Waveform for ${track.path || "track"}`);
+
+                const controls = document.createElement("div");
+                controls.className = "track-controls";
+
+                const volume = document.createElement("div");
+                volume.className = "volume-control";
+
+                const volumeTitle = document.createElement("span");
+                volumeTitle.className = "volume-label";
+                volumeTitle.textContent = "Volume";
+
+                const volumeValue = document.createElement("div");
+                volumeValue.className = "volume-value";
+                volumeValue.textContent = `Volume: ${formatDb(track.volume > 0 ? 20 * Math.log10(track.volume) : -Infinity)}`;
+
+                const slider = document.createElement("input");
+                slider.type = "range";
+                slider.min = "0";
+                slider.max = String(SLIDER_MAX);
+                slider.step = "1";
+                slider.value = String(sliderAtLinear(track.volume));
+                slider.setAttribute("aria-label", `Volume for ${track.path || "track"}`);
+                slider.addEventListener("input", () => {
+                    track.volume = linearAtSlider(slider.value);
+                    volumeValue.textContent = `Volume: ${formatDb(dbAtSlider(slider.value))}`;
+                });
+
+                volume.append(volumeTitle, volumeValue, slider);
+
+                const routing = document.createElement("div");
+                const routingTitle = document.createElement("span");
+                routingTitle.className = "routing-title";
+                routingTitle.textContent = "Routing";
+                routing.append(routingTitle, makeRouting(track));
+
+                controls.append(volume, routing);
+                card.append(header, canvas, controls);
+
+                requestAnimationFrame(() => drawWaveform(canvas, track.buffer));
+                return card;
+            }
+
+            function updateSelectedCount(song) {
+                const count = song.tracks.filter(track => track.selected).length;
+                const label = document.getElementById("selectedCount");
+                if (label) label.textContent = `${count} selected`;
+            }
+
+            function renderSongEditor() {
+                songEditorEl.replaceChildren();
+                const song = currentSong();
+                if (!song) return;
+
+                const header = document.createElement("div");
+                header.className = "song-header";
+
+                const title = document.createElement("h2");
+                title.textContent = song.name;
+
+                const actions = document.createElement("div");
+                actions.className = "row";
+
+                const rename = document.createElement("button");
+                rename.type = "button";
+                rename.className = "secondary";
+                rename.textContent = "Rename";
+                rename.addEventListener("click", () => {
+                    const value = prompt("Song name:", song.name);
+                    if (value && value.trim()) {
+                        song.name = value.trim();
+                        render();
+                        setStatus("Song renamed.");
+                    }
+                });
+
+                const addTrackLabel = document.createElement("label");
+                addTrackLabel.className = "button";
+                addTrackLabel.htmlFor = "audioFiles";
+                addTrackLabel.textContent = "Add audio files";
+
+                const fileInput = document.createElement("input");
+                fileInput.type = "file";
+                fileInput.id = "audioFiles";
+                fileInput.accept = "audio/*,.wav,.mp3,.ogg,.flac,.m4a,.aac";
+                fileInput.multiple = true;
+                fileInput.addEventListener("change", event => addAudioFiles(song.id, event.target.files));
+
+                actions.append(rename, addTrackLabel, fileInput);
+                header.append(title, actions);
+                songEditorEl.appendChild(header);
+
+                const bulk = document.createElement("div");
+                bulk.className = "bulk";
+
+                const bulkVolumeBox = document.createElement("div");
+                bulkVolumeBox.className = "bulk-box";
+
+                const bulkVolumeTitle = document.createElement("h3");
+                bulkVolumeTitle.textContent = "Bulk volume";
+
+                const bulkVolume = document.createElement("div");
+                bulkVolume.className = "bulk-volume";
+
+                const bulkSlider = document.createElement("input");
+                bulkSlider.type = "range";
+                bulkSlider.min = "0";
+                bulkSlider.max = String(SLIDER_MAX);
+                bulkSlider.step = "1";
+                bulkSlider.value = String(sliderAtLinear(Math.pow(10, -20 / 20)));
+
+                const bulkValue = document.createElement("span");
+                bulkValue.className = "bulk-value";
+                bulkValue.textContent = "−20.0 dB";
+
+                bulkSlider.addEventListener("input", () => {
+                    bulkValue.textContent = formatDb(dbAtSlider(bulkSlider.value));
+                });
+
+                const applyVolume = document.createElement("button");
+                applyVolume.type = "button";
+                applyVolume.textContent = "Apply";
+                applyVolume.addEventListener("click", () => {
+                    const selected = song.tracks.filter(track => track.selected);
+                    if (!selected.length) {
+                        setStatus("Select tracks before applying bulk volume.");
+                        return;
+                    }
+
+                    const db = dbAtSlider(bulkSlider.value);
+                    const linear = linearAtSlider(bulkSlider.value);
+
+                    for (const track of selected) {
+                        track.volume = linear;
+                        const card = [...songEditorEl.querySelectorAll(".track")]
+                            .find(item => item.dataset.trackId === track.id);
+                        const slider = card?.querySelector('input[type="range"]');
+                        const label = card?.querySelector(".volume-value");
+                        if (slider) slider.value = bulkSlider.value;
+                        if (label) label.textContent = `Volume: ${formatDb(db)}`;
+                    }
+
+                    setStatus(`Set ${selected.length} selected track(s) to ${formatDb(db)}.`);
+                });
+
+                bulkVolume.append(bulkSlider, bulkValue, applyVolume);
+                bulkVolumeBox.append(bulkVolumeTitle, bulkVolume);
+
+                const bulkRoutingBox = document.createElement("div");
+                bulkRoutingBox.className = "bulk-box";
+
+                const bulkRoutingTitle = document.createElement("h3");
+                bulkRoutingTitle.textContent = "Bulk routing";
+
+                const selectAllLabel = document.createElement("label");
+                selectAllLabel.className = "select-all";
+
+                const selectAll = document.createElement("input");
+                selectAll.type = "checkbox";
+                selectAll.checked = song.tracks.length > 0 &&
+                    song.tracks.every(track => track.selected);
+                selectAll.addEventListener("change", () => {
+                    song.tracks.forEach(track => { track.selected = selectAll.checked; });
+                    render();
+                });
+
+                const selectedCount = document.createElement("span");
+                selectedCount.id = "selectedCount";
+                selectedCount.textContent = `${song.tracks.filter(track => track.selected).length} selected`;
+                selectAllLabel.append(selectAll, document.createTextNode("Select all"), selectedCount);
+
+                const routeActions = document.createElement("div");
+                routeActions.className = "row";
+
+                const actionsList = [
+                    ["Left on", 0, true],
+                    ["Left off", 0, false],
+                    ["Right on", 1, true],
+                    ["Right off", 1, false],
+                    ["All on", "all", true],
+                    ["All off", "all", false]
+                ];
+
+                for (const [label, channel, enabled] of actionsList) {
+                    const button = document.createElement("button");
+                    button.type = "button";
+                    button.className = "secondary";
+                    button.textContent = label;
+                    button.addEventListener("click", () => {
+                        const selected = song.tracks.filter(track => track.selected);
+                        if (!selected.length) {
+                            setStatus("Select tracks before applying bulk routing.");
+                            return;
+                        }
+
+                        for (const track of selected) {
+                            const channels = channel === "all" ? [0, 1] : [channel];
+                            for (const ch of channels) track.routing[ch].fill(enabled);
+                        }
+
+                        render();
+                        setStatus(`Updated routing for ${selected.length} selected track(s).`);
+                    });
+                    routeActions.appendChild(button);
+                }
+
+                bulkRoutingBox.append(bulkRoutingTitle, selectAllLabel, routeActions);
+                bulk.append(bulkVolumeBox, bulkRoutingBox);
+                songEditorEl.appendChild(bulk);
+
+                const tracks = document.createElement("div");
+                tracks.className = "tracks";
+
+                if (!song.tracks.length) {
+                    const empty = document.createElement("div");
+                    empty.className = "empty";
+                    empty.textContent = "No tracks yet. Choose audio files to add tracks to this song.";
+                    tracks.appendChild(empty);
+                } else {
+                    song.tracks.forEach((track, index) => {
+                        const card = makeTrackCard(song, track, index);
+                        card.dataset.trackId = track.id;
+                        tracks.appendChild(card);
+                    });
+                }
+
+                songEditorEl.appendChild(tracks);
+            }
+
+            function render() {
+                renderSongList();
+                renderSongEditor();
+            }
+
+            async function addAudioFiles(songId, fileList) {
+                const song = state.songs.find(item => item.id === songId);
+                const files = Array.from(fileList || []);
+                if (!song || !files.length) return;
+
+                setStatus(`Loading ${files.length} audio file(s)…`);
+
+                let audioContext;
+                try {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioContextClass) throw new Error("Audio decoding is not supported in this browser.");
+                    audioContext = new AudioContextClass();
+
+                    let added = 0;
+                    let failed = 0;
+
+                    for (const file of files) {
+                        try {
+                            const buffer = await audioContext.decodeAudioData(await file.arrayBuffer());
+                            song.tracks.push(newTrack(file, buffer));
+                            added++;
+                        } catch (error) {
+                            console.error("Could not decode", file.name, error);
+                            failed++;
+                        }
+                    }
+
+                    render();
+                    setStatus(
+                        `Added ${added} track(s) to ${song.name}` +
+                        (failed ? `; ${failed} file(s) could not be decoded.` : ".")
+                    );
+                } catch (error) {
+                    console.error(error);
+                    setStatus(`Could not load audio: ${error.message}`);
+                } finally {
+                    if (audioContext && audioContext.state !== "closed") {
+                        await audioContext.close().catch(() => { });
+                    }
+                }
+            }
+
+            function saveConfig() {
+                const config = {
+                    songs: state.songs.map(song => ({
+                        name: song.name,
+                        tracks: song.tracks.map(track => ({
+                            path: track.path,
+                            volume: track.volume,
+                            routing: track.routing.map(row =>
+                                row.map((enabled, index) => enabled ? index + 1 : null)
+                                    .filter(output => output !== null)
+                            )
+                        }))
+                    }))
+                };
+
+                const blob = new Blob([JSON.stringify(config, null, 2)], {
+                    type: "application/json"
+                });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = "songs-config.json";
+                link.click();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                setStatus("Config downloaded.");
+            }
+
+            async function loadConfig(file) {
+                if (!file) return;
+
+                try {
+                    const data = JSON.parse(await file.text());
+                    state.songs = normalizeSongs(data);
+                    state.activeSongId = state.songs[0].id;
+                    render();
+                    setStatus(`Loaded ${state.songs.length} song(s). Re-select audio files to see waveforms.`);
+                } catch (error) {
+                    console.error(error);
+                    setStatus(`Could not load config: ${error.message}`);
+                } finally {
+                    configFileInput.value = "";
+                }
+            }
+
+            document.getElementById("addSong").addEventListener("click", addSong);
+            document.getElementById("removeSong").addEventListener("click", removeSong);
+            document.getElementById("duplicateSong").addEventListener("click", duplicateSong);
+            document.getElementById("saveConfig").addEventListener("click", saveConfig);
+            document.getElementById("loadConfig").addEventListener("click", () => configFileInput.click());
+            configFileInput.addEventListener("change", event => loadConfig(event.target.files[0]));
+
+            const firstSong = newSong("Song 1");
+            state.songs.push(firstSong);
+            state.activeSongId = firstSong.id;
+            render();
+        })();
+    </script>
+</body>
+
+</html>
