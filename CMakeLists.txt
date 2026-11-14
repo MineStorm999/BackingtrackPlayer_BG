@@ -23,6 +23,7 @@ add_executable(BTP_Backend
     main.cpp
     Track.cpp
     Song.cpp
+    Show.cpp
 )
 
 target_link_libraries(BTP_Backend PRIVATE Eigen3::Eigen PkgConfig::UDISKS2)
