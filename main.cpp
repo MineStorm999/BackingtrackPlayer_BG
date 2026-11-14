@@ -88,13 +88,6 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
   // dstMat.rowwise() += volumeVec.transpose();
 }
 
-void Test() {
-  printf("Test\n");
-  std::ifstream f("config.json");
-  nlohmann::json data = nlohmann::json::parse(f);
-  Track dec(data[0]);
-}
-
 bool is_removable_device(UDisksClient *client, UDisksBlock *block) {
   if (!client || !block) {
     return false;
@@ -239,7 +232,7 @@ void TestDisksLoop() {
 
 int main() {
   // TestUDEV();
-  TestDisksLoop();
+  // TestDisksLoop();
   ma_result result;
   ma_decoder decoder;
   ma_device_config deviceConfig;
