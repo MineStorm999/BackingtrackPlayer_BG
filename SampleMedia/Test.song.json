@@ -1,4 +1,5 @@
 {
+    "name": "Test Song",
     "tracks": [
         {
             "path": "SampleMedia/ShakeItRap_CH05 Click.wav",

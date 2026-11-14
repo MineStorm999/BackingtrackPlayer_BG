@@ -14,7 +14,7 @@
 **Song Config**
 - Shows must contain .song (ie.: my_show.song.json)
 ```
-"name":"song name"
+"name":"song name",
 "tracks":[
     {   // per track (file)
         "path":"path/to/audio/file", 
@@ -38,7 +38,7 @@
 - Shows Must be in top (root) level.
 - Shows must contain .show (ie.: my_show.show.json)
 ```
-"name":"show name"
+"name":"show name",
 "songs":[
     {
         "path":"path/to/show.config"
