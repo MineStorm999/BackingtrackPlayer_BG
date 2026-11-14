@@ -5,7 +5,9 @@
 
 Song::Song(const std::string &dir, const std::string &path) {
   m_dir = dir;
-  std::ifstream f(m_dir + path); // validate file
+  std::string npath = m_dir + path;
+  printf("Path %s\n", npath.c_str());
+  std::ifstream f(npath); // validate file
   if (!f.is_open()) {
     return;
   }

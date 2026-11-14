@@ -59,8 +59,15 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
   if (!show) {
     return;
   }
+  if (!show->Valid()) {
+    return;
+  }
   std::shared_ptr<Song> song = show->GetSong();
   if (!song) {
+    return;
+  }
+  if (!song->Valid()) {
+    show->Prev();
     return;
   }
   if (song->MustReverse()) {
@@ -237,12 +244,13 @@ int main() {
   ma_decoder decoder;
   ma_device_config deviceConfig;
   ma_device device;
-  std::ifstream f("config.json");
-  nlohmann::json data = nlohmann::json::parse(f);
 
-  Show show("/home/spacedviking/Dokumente/BrassGazz/BackingtrackPlayer_BG/"
-            "test.show.json",
+  Show show("/home/spacedviking/Dokumente/BrassGazz/BackingtrackPlayer_BG/",
             "test.show.json");
+  if (!show.Valid()) {
+    return -1;
+  }
+  printf("Loaded Show %s\n", show.GetName().c_str());
 
   deviceConfig = ma_device_config_init(ma_device_type_playback);
   deviceConfig.playback.format = ma_format_f32;
@@ -267,13 +275,13 @@ int main() {
 
     printf("Press Enter to quit...");
     getchar();
-    if (state == 0) {
+    /*if (state == 0) {
       song.Pause(true);
       state++;
     } else if (state == 1) {
       song.Play();
       state = 0;
-    }
+    }*/
   }
   ma_device_uninit(&device);
 

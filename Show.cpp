@@ -39,6 +39,11 @@ Show::Show(const std::string &dir, const std::string &path) {
     return;
   }
   m_ready = true;
+  auto s = GetSong();
+  if (!s) {
+    return;
+  }
+  s->Play();
 }
 
 // get current song returns nullptr if not valid
@@ -50,19 +55,21 @@ const std::shared_ptr<Song> Show::GetSong() {
   if (m_currentSongID != m_songID) { // song changed
     int songID = m_songID;
     if (songID < m_songs.size() && songID >= 0) { // new song id valid
-
-      std::string path =
-          (m_dir + m_songs[songID]); // determine name and dir for the song
-      std::string dir = path.substr(0, path.find_last_of("/"));
-      std::string name = path.substr(path.find_last_of("/") + 1);
-      m_currentSong = std::make_shared<Song>(dir, name);
+      m_currentSongID = songID;
+      m_currentSong = nullptr;
+    } else {
+      songID = m_currentSongID;
+      m_songID = songID;
     }
-    songID = m_currentSongID;
-    m_songID = songID;
   }
 
   if (!m_currentSong) {
-    return nullptr;
+    std::string path =
+        (m_dir +
+         m_songs[m_currentSongID]); // determine name and dir for the song
+    std::string dir = path.substr(0, path.find_last_of("/") + 1);
+    std::string name = path.substr(path.find_last_of("/") + 1);
+    m_currentSong = std::make_shared<Song>(dir, name);
   }
   if (!m_currentSong->Valid()) {
     return nullptr;

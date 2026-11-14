@@ -1,8 +1,6 @@
 {
     "name": "Test",
     "songs": [
-        {
-            "path": "SampleMedia/Test.song.json"
-        }
+        "SampleMedia/Test.song.json"
     ]
 }
