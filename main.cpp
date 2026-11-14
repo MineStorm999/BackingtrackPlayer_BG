@@ -8,7 +8,7 @@
 #include <thread>
 #include <unistd.h>
 #define MINIAUDIO_IMPLEMENTATION
-#include "Song.h"
+#include "Show.h"
 #include "defines.h"
 #include "miniaudio.h"
 #include <Eigen/Dense>
@@ -55,7 +55,11 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
     return;
   }
 
-  Song *song = (Song *)pDevice->pUserData;
+  Show *show = (Show *)pDevice->pUserData;
+  if (!show) {
+    return;
+  }
+  std::shared_ptr<Song> song = show->GetSong();
   if (!song) {
     return;
   }
@@ -65,6 +69,7 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
   if (!song->Playing()) {
     return;
   }
+
   Eigen::Map<Eigen::MatrixXf> dstMat((float *)pOutput, OUT_CHANNEL_COUNT,
                                      frameCount);
   for (auto track : song->tracks) {
@@ -242,15 +247,16 @@ int main() {
   std::ifstream f("config.json");
   nlohmann::json data = nlohmann::json::parse(f);
 
-  Song song(data);
-  song.Play();
+  Show show("/home/spacedviking/Dokumente/BrassGazz/BackingtrackPlayer_BG/"
+            "test.show.json",
+            "test.show.json");
 
   deviceConfig = ma_device_config_init(ma_device_type_playback);
   deviceConfig.playback.format = ma_format_f32;
   deviceConfig.playback.channels = OUT_CHANNEL_COUNT;
   deviceConfig.sampleRate = SAMPLE_RATE;
   deviceConfig.dataCallback = data_callback;
-  deviceConfig.pUserData = &song;
+  deviceConfig.pUserData = &show;
 
   if (ma_device_init(NULL, &deviceConfig, &device) != MA_SUCCESS) {
     printf("Failed to open playback device.\n");

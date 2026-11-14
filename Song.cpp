@@ -1,21 +1,37 @@
 #include "Song.h"
 #include <algorithm>
 #include <cstdio>
+#include <fstream>
 
-Song::Song(nlohmann::json &config) {
-  FromFile(config);
+Song::Song(const std::string &dir, const std::string &path) {
+  m_dir = dir;
+  std::ifstream f(m_dir + path); // validate file
+  if (!f.is_open()) {
+    return;
+  }
+
+  nlohmann::json config = nlohmann::json::parse(f); // parse and validate json
+  if (config.is_null()) {
+    return;
+  }
+
+  if (!_FromJSON(config)) { // load from json
+    return;
+  }
+
+  m_ready = true;
   m_playing = true;
 }
-void Song::FromFile(nlohmann::json &config) {
+bool Song::_FromJSON(nlohmann::json &config) {
   if (config.is_null()) { // config missing
     printf("ERROR config missing\n");
-    return;
+    return false;
   }
 
   nlohmann::json &tracksJS = config["tracks"];
   if (!tracksJS.is_array()) { // files missing
     printf("ERROR files missing\n");
-    return;
+    return false;
   }
 
   tracks.clear();
@@ -23,7 +39,7 @@ void Song::FromFile(nlohmann::json &config) {
   // int i = 0;
   for (nlohmann::json &f : tracksJS) {
     for (int i = 0; i < 1; i++) {
-      tracks.push_back(std::make_shared<Track>(f));
+      tracks.push_back(std::make_shared<Track>(m_dir, f));
       if (!tracks.back()->Ready()) {
         printf("Warning file setup failed/not routed, removing\n");
         tracks.pop_back();
@@ -31,6 +47,11 @@ void Song::FromFile(nlohmann::json &config) {
     }
   }
   tracks.shrink_to_fit();
+  if (tracks.empty()) {
+    printf("Song hasn't got any tracks\n");
+    return false;
+  }
+  return true;
 }
 
 ma_uint64 Song::GetProgressInPCMFrames() { return m_sampleProgress; }
@@ -101,4 +122,6 @@ void Song::ReverseTracks() {
     }
   }
   printf("Reverse");
-};
+}
+bool Song::Valid() { return m_ready; };
+;

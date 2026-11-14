@@ -1,11 +1,11 @@
 #include "Show.h"
 #include "json.hpp"
-#include <cstdio>
 #include <fstream>
 #include <memory>
 
-Show::Show(const std::string &path) {
-  std::ifstream f(path); // validate file
+Show::Show(const std::string &dir, const std::string &path) {
+  m_dir = dir;
+  std::ifstream f(m_dir + path); // validate file
   if (!f.is_open()) {
     return;
   }
@@ -21,32 +21,54 @@ Show::Show(const std::string &path) {
   }
   m_name = jName;
 
-  nlohmann::json &jSongs = config["songs"];
+  nlohmann::json &jSongs = config["songs"]; // get the song list
   if (!jSongs.is_array()) {
     return;
   }
+
   m_songs.reserve(jSongs.size());
-  for (nlohmann::json &jSong : jSongs) {
-    m_songs.push_back(std::make_shared<Song>(jSong));
-    if (!m_songs.back()) {
-      printf("Song is invalid, disposing...");
-      m_songs.pop_back();
+
+  for (nlohmann::json &jSong : jSongs) { // copy the file paths
+    if (!jSong.is_string()) {
       continue;
     }
-    if (m_songs.back()->tracks.empty()) {
-      printf("Song has no tracks, disposing...");
-      m_songs.pop_back();
-      continue;
-    }
+    m_songs.push_back((jSong));
   }
   m_songs.shrink_to_fit();
   if (m_songs.empty()) {
     return;
   }
+  m_ready = true;
 }
 
-// get current song
-const std::shared_ptr<Song> Show::GetSong() { return m_songs[m_songID]; }
+// get current song returns nullptr if not valid
+const std::shared_ptr<Song> Show::GetSong() {
+  if (!Valid()) { // invalid
+    return nullptr;
+  }
+
+  if (m_currentSongID != m_songID) { // song changed
+    int songID = m_songID;
+    if (songID < m_songs.size() && songID >= 0) { // new song id valid
+
+      std::string path =
+          (m_dir + m_songs[songID]); // determine name and dir for the song
+      std::string dir = path.substr(0, path.find_last_of("/"));
+      std::string name = path.substr(path.find_last_of("/") + 1);
+      m_currentSong = std::make_shared<Song>(dir, name);
+    }
+    songID = m_currentSongID;
+    m_songID = songID;
+  }
+
+  if (!m_currentSong) {
+    return nullptr;
+  }
+  if (!m_currentSong->Valid()) {
+    return nullptr;
+  }
+  return m_currentSong;
+}
 
 // move to next song
 void Show::Next() {

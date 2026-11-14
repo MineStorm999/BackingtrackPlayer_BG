@@ -4,9 +4,9 @@
 
 class Song {
 public:
-  Song(nlohmann::json &config);
+  Song(const std::string &dir, const std::string &path);
 
-  void FromFile(nlohmann::json &config);
+  bool _FromJSON(nlohmann::json &config);
 
   ma_uint64 GetProgressInPCMFrames();
 
@@ -26,7 +26,11 @@ public:
 
   void ReverseTracks();
 
+  bool Valid();
+
 private:
+  bool m_ready{false};
+  std::string m_dir{};
   std::atomic<ma_uint64> m_sampleProgress; // in pcm frames
   std::atomic<bool> m_playing;
   std::atomic<int> m_fadeFramesRemaining;

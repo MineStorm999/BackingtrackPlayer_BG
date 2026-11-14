@@ -12,7 +12,7 @@
  */
 class Track {
 public:
-  Track(nlohmann::json &data);
+  Track(const std::string &dir, nlohmann::json &data);
 
   ~Track();
 

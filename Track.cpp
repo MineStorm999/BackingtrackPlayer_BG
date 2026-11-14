@@ -2,7 +2,7 @@
 
 #include "defines.h"
 
-Track::Track(nlohmann::json &data) {
+Track::Track(const std::string &dir, nlohmann::json &data) {
   if (data.is_null()) {
     printf("ERROR data is null\n");
     return;
@@ -12,7 +12,7 @@ Track::Track(nlohmann::json &data) {
     printf("ERROR path is empty\n");
     return;
   }
-  std::string path = data["path"]; // retrieve json data
+  std::string path = dir + std::string(data["path"]); // retrieve json data
 
   if (!data["volume"].is_number()) {
     printf("ERROR volume is empty, defaulting to 1.0f\n");
