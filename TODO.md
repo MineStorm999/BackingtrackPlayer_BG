@@ -6,7 +6,7 @@
     - [x] revert
     - [x] fade out to prevent clipping
 - [] show structure
-    - [] show
+    - [x] show
     - [x] songs
     - [x] tracks
 

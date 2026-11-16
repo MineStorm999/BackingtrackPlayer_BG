@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 project(BTPlayer VERSION 1.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)
@@ -24,6 +24,7 @@ add_executable(BTP_Backend
     Track.cpp
     Song.cpp
     Show.cpp
+    Library.cpp
 )
 
 target_link_libraries(BTP_Backend PRIVATE Eigen3::Eigen PkgConfig::UDISKS2)
