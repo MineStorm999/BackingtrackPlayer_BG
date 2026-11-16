@@ -14,6 +14,7 @@
 - [Mini Audio](https://github.com/mackron/miniaudio) for wav/mp3/flac file streaming and multichannel playblack
 - [JSON](https://github.com/nlohmann/json) for human readable config
 - [Eigen](https://libeigen.gitlab.io/) for vectorisation
+
 ## Docs
 ### JSON Config 
 ***Important*** All paths **must** be *relative*  
@@ -70,4 +71,69 @@ root/
       |---track.wav
       |---track1.wav
       |---track2.wav
+```
+
+### Show Manager
+```plantuml
+@startuml
+skinparam activity {
+    ' this is a comment
+    BackgroundColor White
+    BorderColor Black /' this is a comment '/
+    BorderColor Red  ' this is not a comment and this line is ignored
+}
+
+    class Song{
+        
+        //Song_Data
+    }
+    note right of Song: Implemented
+    
+
+    class Show{
+        - Song m_songs[] // READ ONLY
+        --
+        + GetSong() // returns current Song
+        + Next()
+        + Prev()
+    }
+    note right of Show: Implemented
+
+    class ShowManager{
+        - async_list<Library> m_libs;
+        - m_libID;
+        - m_showID;
+        --
+        + bool Next()
+        + bool Prev() 
+        + Show* GetShow() // returns current show
+    }
+    note right of ShowManager: Need To Implement
+
+    class Library{
+        - USB_DeviceRef ref
+        - Show m_shows[]
+        --
+        + _OnRemoved()
+        + _Count()
+        + Show* GetShow(int id) // returns show at id  
+        + Valid() // returns false, if usb dev was removed (or empty)
+    }
+    note right of Library: Need To Implement
+
+    Song <-- Show
+    Library <-- ShowManager
+    Show <-- Library
+@enduml
+```
+
+### What happens when the usb gets detached
+```plantuml
+@startuml
+start 
+:USB Detached;
+:Library gets invalidated;
+:Audio thread requests next (valid) song;
+:Remove the Lib;
+@enduml
 ```
