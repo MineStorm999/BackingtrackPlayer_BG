@@ -84,8 +84,8 @@ skinparam activity {
 }
 
     class Song{
-        
         //Song_Data
+        + Valid() //return false if directory missing or no tracks
     }
     note right of Song: Implemented
     
@@ -96,6 +96,7 @@ skinparam activity {
         + GetSong() // returns current Song
         + Next()
         + Prev()
+        + Valid() // returns false if directory missing, or no songs
     }
     note right of Show: Implemented
 
