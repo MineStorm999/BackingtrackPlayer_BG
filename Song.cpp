@@ -42,7 +42,7 @@ bool Song::_FromJSON(nlohmann::json &config) {
   for (nlohmann::json &f : tracksJS) {
     for (int i = 0; i < 1; i++) {
       tracks.push_back(std::make_shared<Track>(m_dir, f));
-      if (!tracks.back()->Ready()) {
+      if (!tracks.back()->Valid()) {
         printf("Warning file setup failed/not routed, removing\n");
         tracks.pop_back();
       }
@@ -105,6 +105,7 @@ float Song::GetVolumeForNextSample() {
   return m_volume;
 }
 bool Song::Playing() { return m_playing; }
+
 bool Song::MustReverse() {
   if (m_mustReverse) {
     m_mustReverse = false;
@@ -125,5 +126,51 @@ void Song::ReverseTracks() {
   }
   printf("Reverse");
 }
-bool Song::Valid() { return m_ready; };
-;
+
+bool Song::Valid() { return m_ready; }
+void Song::_Invalidate() { m_ready = false; };
+
+void Song::MixTracksToOut(Eigen::Map<Eigen::MatrixXf> &outMat,
+                          ma_uint64 count) {
+  if (!Valid()) {
+    return;
+  }
+
+  if (!Playing()) {
+    return;
+  }
+
+  if (MustReverse()) {
+    ReverseTracks();
+  }
+  bool tracksValid = false;  // remains false, if all tracks are invalid
+  bool tracksStopped = true; // remains true when all tracks are stopped
+
+  for (std::shared_ptr<Track> t : tracks) {
+    if (!t->Valid()) { // track not ready
+      continue;
+    }
+    tracksValid = true;
+
+    if (!t->Playing()) { // track not playing
+      continue;
+    }
+
+    tracksStopped = false;
+    t->ReadPCMFramesAndMixToOutput(outMat, count); // mix track to out
+  }
+  if (!tracksValid) {
+    _Invalidate();
+  }
+  if (tracksStopped) {
+    m_playing = false;
+  }
+
+  if (!m_shouldFade) {
+    return;
+  }
+  for (int i = 0; i < count; i++) {
+    // volumeVec[i] = song->GetVolumeForNextSample();
+    outMat.col(i) *= std::pow(GetVolumeForNextSample(), 2);
+  }
+}

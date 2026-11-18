@@ -27,6 +27,9 @@ public:
   void ReverseTracks();
 
   bool Valid();
+  void _Invalidate();
+
+  void MixTracksToOut(Eigen::Map<Eigen::MatrixXf> &outMat, ma_uint64 count);
 
 private:
   bool m_ready{false};

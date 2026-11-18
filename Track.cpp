@@ -85,7 +85,7 @@ void Track::_Uninit() {
   m_ready = false;
   m_routingMatrix.clear();
 }
-bool Track::Ready() { return m_ready; }
+bool Track::Valid() { return m_ready; }
 ma_uint32 Track::GetChannelCount() {
   if (!m_ready) {
     return 0;
@@ -118,9 +118,9 @@ void Track::Play(bool fromBeginning) {
 ma_uint64
 Track::ReadPCMFramesAndMixToOutput(Eigen::Map<Eigen::MatrixXf> &outMat,
                                    ma_uint64 count) {
-
   if (!m_playing ||
       !m_ready) { // return early, if paused (or not initialized right)
+                  // TODO Consider removing redundant check
     return 0;
   }
 
@@ -132,8 +132,8 @@ Track::ReadPCMFramesAndMixToOutput(Eigen::Map<Eigen::MatrixXf> &outMat,
 
   // auto &t = dstMat;s
   ma_uint64 read = 0;
-  result =
-      ma_decoder_read_pcm_frames(&m_decoder, m_tempBuffer.data(), count, &read);
+  m_ready &= ma_decoder_read_pcm_frames(&m_decoder, m_tempBuffer.data(), count,
+                                        &read) == MA_SUCCESS;
 
   Eigen::Map<Eigen::MatrixXf> inMat(m_tempBuffer.data(), GetChannelCount(),
                                     read); // create matrix
