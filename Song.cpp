@@ -60,6 +60,7 @@ ma_uint64 Song::GetProgressInPCMFrames() { return m_sampleProgress; }
 
 void Song::Play() {
   m_playing = true;
+  m_finished = false;
   StartFade(1.0, 4800, false, false);
   printf("Play\n");
 }
@@ -164,6 +165,7 @@ void Song::MixTracksToOut(Eigen::Map<Eigen::MatrixXf> &outMat,
   }
   if (tracksStopped) {
     m_playing = false;
+    m_finished = true;
   }
 
   if (!m_shouldFade) {
@@ -174,3 +176,4 @@ void Song::MixTracksToOut(Eigen::Map<Eigen::MatrixXf> &outMat,
     outMat.col(i) *= std::pow(GetVolumeForNextSample(), 2);
   }
 }
+bool Song::Finished() { return m_finished; }

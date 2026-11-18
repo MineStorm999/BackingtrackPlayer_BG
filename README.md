@@ -134,7 +134,7 @@ skinparam activity {
 start 
 :USB Detached;
 :Library gets invalidated;
-:Audio thread requests next (valid) song;
+:Audio thread requests previous (valid) song;
 :Remove the Lib;
 @enduml
 ```

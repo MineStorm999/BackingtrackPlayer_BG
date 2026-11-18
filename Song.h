@@ -31,14 +31,18 @@ public:
 
   void MixTracksToOut(Eigen::Map<Eigen::MatrixXf> &outMat, ma_uint64 count);
 
+  bool Finished();
+
 private:
-  bool m_ready{false};
+  std::atomic<bool> m_ready{false};
   std::string m_dir{};
   std::atomic<ma_uint64> m_sampleProgress; // in pcm frames
   std::atomic<bool> m_playing;
   std::atomic<int> m_fadeFramesRemaining;
   std::atomic<float> m_fadeAmount;
   std::atomic<bool> m_shouldFade;
+
+  std::atomic<bool> m_finished{false};
 
   std::atomic<bool> m_shouldStop;
   std::atomic<bool> m_shouldReverse;
