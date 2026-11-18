@@ -70,23 +70,19 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
     show->Prev();
     return;
   }
-  if (song->MustReverse()) {
-    song->ReverseTracks();
-  }
-  if (!song->Playing()) {
-    return;
-  }
 
   Eigen::Map<Eigen::MatrixXf> dstMat((float *)pOutput, OUT_CHANNEL_COUNT,
                                      frameCount);
-  for (auto track : song->tracks) {
-    if (!track) {
-      continue;
-    }
+  /* for (auto track : song->tracks) {
+     if (!track) {
+       continue;
+     }
 
-    track->ReadPCMFramesAndMixToOutput(dstMat, frameCount);
-  }
-  Eigen::VectorXf volumeVec(frameCount);
+     track->ReadPCMFramesAndMixToOutput(dstMat, frameCount);
+   }*/
+
+  // Eigen::VectorXf volumeVec(frameCount);
+  song->MixTracksToOut(dstMat, frameCount);
 
   for (int i = 0; i < frameCount; i++) {
     // volumeVec[i] = song->GetVolumeForNextSample();

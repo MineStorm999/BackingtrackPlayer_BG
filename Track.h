@@ -31,7 +31,7 @@ private:
   void _Uninit();
 
 public:
-  bool Ready();
+  bool Valid();
 
   ma_uint32 GetChannelCount();
 
