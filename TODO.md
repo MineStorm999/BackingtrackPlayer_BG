@@ -23,4 +23,5 @@
             - [] auto sync
             - [] parallel playpack
     - [] lock free & thread safe song list
+        - [] for now just thread safe
     
