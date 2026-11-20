@@ -136,5 +136,33 @@ start
 :Library gets invalidated;
 :Audio thread requests previous (valid) song;
 :Remove the Lib;
+end
+
+@enduml
+```
+
+### What happens when the usb gets attached
+```plantuml
+@startuml
+:USB Attached;
+ fork
+   :Library;
+   :Loads Shows in vector (local);
+   :Lock Global Show Vector and insert local;
+ fork again
+   :Audio thread;
+   if (Play) then
+   :start Manager->NextSong;
+   endif
+   detach;
+ fork again
+    :Ctrl Thread;
+    if (Prev/Next) then
+    :lock Manager->Shows;
+    :prev/next logic (select song);
+    :atomically set Manager->NextSong to selected song;
+    :Maybe request restart;
+    endif
+ endfork
 @enduml
 ```
