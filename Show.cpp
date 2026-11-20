@@ -2,6 +2,7 @@
 #include "json.hpp"
 #include <fstream>
 #include <memory>
+#include <thread>
 
 Show::Show(const std::string &dir, const std::string &path) {
   m_dir = dir;
@@ -70,6 +71,8 @@ const std::shared_ptr<Song> Show::GetSong() {
     std::string dir = path.substr(0, path.find_last_of("/") + 1);
     std::string name = path.substr(path.find_last_of("/") + 1);
     m_currentSong = std::make_shared<Song>(dir, name);
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(1000)); // TODO remove DEBUG
   }
   if (!m_currentSong->Valid()) {
     return nullptr;
