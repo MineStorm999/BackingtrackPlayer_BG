@@ -1,25 +1,19 @@
 #include "Library.h"
 #include <memory>
 
-Library::Library(const std::string &path) {}
-std::shared_ptr<Show> Library::GetCurrentShow() {
-  if (!m_currentShowNode) {
-    return nullptr;
-  };
-  return m_currentShowNode->own;
+Library::Library(const std::string &path) {
+  // todo scan dir for shows
+  m_valid = true;
 }
+
 std::shared_ptr<Show> Library::GetShow(ma_uint32 id) {
-  int i = m_currentShowID;
-  std::shared_ptr<Node> cur;
-  while (i >= 0 && i < m_nodeCount) {
-
-    if (id > i) {
-
-      if (!m_currentShowNode->prev)
-        i--;
-
-    } else {
-      i++;
-    }
+  if (id > m_shows.size()) {
+    return nullptr;
   }
+  if (!Valid()) {
+    return nullptr;
+  }
+  return m_shows[id];
 }
+bool Library::Valid() { return m_valid; }
+void Library::_Invalidate() { m_valid = false; };
