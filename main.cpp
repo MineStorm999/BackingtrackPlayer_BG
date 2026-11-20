@@ -70,6 +70,8 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
     show->Prev();
     return;
   }
+  // sleep_ms(100);
+  /// std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
   Eigen::Map<Eigen::MatrixXf> dstMat((float *)pOutput, OUT_CHANNEL_COUNT,
                                      frameCount);
