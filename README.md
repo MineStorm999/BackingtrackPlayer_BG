@@ -5,8 +5,19 @@
 - Song in one show management **TODO**
 - multiple show management **TODO**
 - auto load shows from usb when inserted **TODO**
-- Internally uses f32 for easyer programming
+- Internally uses f32 for easier programming
 
+### Install
+```
+git clone https://github.com/MineStorm999/BackingtrackPlayer_BG.git
+git checkout RaspiTest
+cd "to/cloned/dir"
+mkdir build
+cd build 
+cmake ..
+```
+
+the created executable should be in build/bin 
 ### Roadmap
 [TodoList](TODO.md)
 
