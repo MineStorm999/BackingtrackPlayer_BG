@@ -17,7 +17,11 @@ cd build
 cmake ..
 ```
 
-the created executable should be in build/bin 
+the created executable should be in build/
+
+### Run
+from **project root** run ./build/BT_Backend
+
 ### Roadmap
 [TodoList](TODO.md)
 
