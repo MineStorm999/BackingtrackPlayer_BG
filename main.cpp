@@ -70,27 +70,15 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
     show->Prev();
     return;
   }
-  // sleep_ms(100);
-  /// std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
   Eigen::Map<Eigen::MatrixXf> dstMat((float *)pOutput, OUT_CHANNEL_COUNT,
                                      frameCount);
-  /* for (auto track : song->tracks) {
-     if (!track) {
-       continue;
-     }
 
-     track->ReadPCMFramesAndMixToOutput(dstMat, frameCount);
-   }*/
-
-  // Eigen::VectorXf volumeVec(frameCount);
   song->MixTracksToOut(dstMat, frameCount);
 
   for (int i = 0; i < frameCount; i++) {
-    // volumeVec[i] = song->GetVolumeForNextSample();
     dstMat.col(i) *= std::pow(song->GetVolumeForNextSample(), 2);
   }
-  // dstMat.rowwise() += volumeVec.transpose();
 }
 
 bool is_removable_device(UDisksClient *client, UDisksBlock *block) {

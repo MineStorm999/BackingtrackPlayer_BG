@@ -7,6 +7,18 @@
 - auto load shows from usb when inserted **TODO**
 - Internally uses f32 for easyer programming
 
+### Installation
+```
+git clone https://github.com/MineStorm999/BackingtrackPlayer_BG.git
+cd BackingtrackPlayer_BG
+mkdir build
+cmake ..
+make
+cd ..
+```
+### Run
+from project root run ./build/BTP_Backend
+
 ### Roadmap
 [TodoList](TODO.md)
 

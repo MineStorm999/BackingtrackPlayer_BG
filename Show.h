@@ -18,6 +18,8 @@ public:
 
   void _MakeInvalid() { m_ready = false; };
 
+  std::atomic<bool> used{false};
+
 private:
   std::string m_dir{};
   std::shared_ptr<Song> m_currentSong;
