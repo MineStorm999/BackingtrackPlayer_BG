@@ -8,7 +8,7 @@
 #include <thread>
 #include <unistd.h>
 #define MINIAUDIO_IMPLEMENTATION
-#include "Show.h"
+#include "Manager.h"
 #include "defines.h"
 #include "miniaudio.h"
 #include <Eigen/Dense>
@@ -55,7 +55,12 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
     return;
   }
 
-  Show *show = (Show *)pDevice->pUserData;
+  Manager *manager = (Manager *)pDevice->pUserData;
+  if (!manager) {
+    return;
+  }
+  Show *show = manager->GetCurrentShow();
+
   if (!show) {
     return;
   }

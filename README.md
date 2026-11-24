@@ -5,7 +5,7 @@
 - Song in one show management **TODO**
 - multiple show management **TODO**
 - auto load shows from usb when inserted **TODO**
-- Internally uses f32 for easyer programming
+- Internally uses f32 for easier programming
 
 ### Installation
 ```
@@ -17,7 +17,10 @@ make
 cd ..
 ```
 ### Run
-from project root run ./build/BTP_Backend
+from project root run 
+```
+./build/BTP_Backend
+```
 
 ### Roadmap
 [TodoList](TODO.md)
