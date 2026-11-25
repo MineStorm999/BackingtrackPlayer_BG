@@ -1,7 +1,7 @@
 #pragma once
 #include "Library.h"
 #include <atomic>
-#include <memory>
+#include <mutex>
 #include <vector>
 
 class Manager {
@@ -12,6 +12,7 @@ public:
   void OnLibRemoved() { m_canStart = false; }
 
   void DisposeInvalidShows() {
+    std::lock_guard<std::mutex> lock(m_showMtx);
     // TODO lock show vector
     /*auto ret = std::remove_if(
         m_shows.begin(), m_shows.begin(),
@@ -22,6 +23,8 @@ public:
           continue;
         }
       }
+      m_cur.compare_exchange_strong(m_shows[i], nullptr);
+      delete m_shows[i];
       m_shows.erase(m_shows.begin() + i);
       i--;
     }
@@ -72,7 +75,7 @@ private:
 
   // needs to bee locked before modify!!!
   std::vector<Show *> m_shows;
-
+  std::mutex m_showMtx;
   std::atomic<bool> m_stopped;
 
   std::atomic<bool> m_canStart;
