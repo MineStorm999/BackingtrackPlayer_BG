@@ -59,8 +59,7 @@ void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
   if (!manager) {
     return;
   }
-  Show *show = manager->GetCurrentShow();
-
+  std::shared_ptr<Show> show = manager->GetCurrentShow();
   if (!show) {
     return;
   }

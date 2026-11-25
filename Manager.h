@@ -1,6 +1,5 @@
 #pragma once
 #include "Library.h"
-#include <algorithm>
 #include <atomic>
 #include <memory>
 #include <vector>
@@ -14,25 +13,37 @@ public:
 
   void DisposeInvalidShows() {
     // TODO lock show vector
-    auto ret = std::remove_if(
+    /*auto ret = std::remove_if(
         m_shows.begin(), m_shows.begin(),
-        [](std::shared_ptr<Show> s) { return s->Valid() && s->used; });
+        [](std::shared_ptr<Show> s) { return s->Valid() && s->used; });*/
+    for (int i = 0; i < m_shows.size(); i++) {
+      if (m_shows[i]) {
+        if (m_shows[i]->Valid() || m_shows[i]->used > 0) {
+          continue;
+        }
+      }
+      m_shows.erase(m_shows.begin() + i);
+      i--;
+    }
   };
 
   // must only be called by audio thread
   void UseNextShow() {
     Show *next = m_next.load();
-    if (!next) {
+    if (!next) { // next song not selected/present
       return;
     }
-    if (!next->Valid()) {
+
+    if (!next->Valid()) { // next song is invalid
+      next->used--;       // not used
       return;
     }
     Show *cur = m_cur.load();
     if (!cur) {
       return;
     }
-    cur->used = false; // safe to delete
+
+    cur->used--; // not used by audio thread
     m_cur = next;
     m_next = nullptr;
   };
@@ -60,7 +71,7 @@ private:
   std::atomic<Show *> m_next;
 
   // needs to bee locked before modify!!!
-  std::vector<std::shared_ptr<Show>> m_shows;
+  std::vector<Show *> m_shows;
 
   std::atomic<bool> m_stopped;
 

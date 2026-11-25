@@ -18,7 +18,7 @@ public:
 
   void _MakeInvalid() { m_ready = false; };
 
-  std::atomic<bool> used{false};
+  std::atomic<int> used{0}; // prevent deletetion when used
 
 private:
   std::string m_dir{};
